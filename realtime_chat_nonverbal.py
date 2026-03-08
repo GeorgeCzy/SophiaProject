@@ -9,7 +9,7 @@ import sys
 # ===== Settings ==========================================================
 API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
-    raise RuntimeError("invalid OPENAI_API_KEY")
+    raise RuntimeError("invalid API key")
 
 MODEL = "gpt-realtime-mini"
 URL = f"wss://api.ohmygpt.com/v1/realtime?model={MODEL}"
@@ -21,7 +21,8 @@ HEADERS = [
 # ======================================================================
 
 stop_event = threading.Event()
-response_lock = threading.Lock()
+response_done = threading.Event()
+response_done.set()
 
 
 def send_text_message(ws, text: str):
@@ -62,6 +63,7 @@ def keyboard_input_loop(ws):
     print("输入内容后按回车发送；输入 exit 或 quit 退出。\n")
 
     while not stop_event.is_set():
+        response_done.wait() # wait for the previous response to finish
         try:
             user_text = input("你: ").strip()
         except EOFError:
@@ -78,12 +80,13 @@ def keyboard_input_loop(ws):
             ws.close()
             break
 
-        with response_lock:
-            print("LLM: ", end="", flush=True)
-            try:
-                send_text_message(ws, user_text)
-            except Exception as e:
-                print(f"\n发送失败: {e}\n", flush=True)
+        response_done.clear()
+        print("LLM: ", end="", flush=True)
+        try:
+          send_text_message(ws, user_text)
+        except Exception as e:
+          print(f"\n发送失败: {e}\n", flush=True)
+          response_done.set()
 
 
 def on_open(ws):
@@ -109,11 +112,13 @@ def on_message(ws, message):
         sys.stdout.flush()
 
     elif t == "response.done":
+        response_done.set()
         print("\n回复结束。\n", flush=True)
 
     elif t == "error":
         print("\n❌ 服务端错误：")
         print(json.dumps(data, ensure_ascii=False, indent=2), flush=True)
+        response_done.set()
 
     else:
         # 调试时可以打开
@@ -123,11 +128,13 @@ def on_message(ws, message):
 
 def on_error(ws, err):
     print(f"❌ {err}")
+    response_done.set()
 
 
 def on_close(ws, code, reason):
     print(f"WS closed ({code}/{reason})")
     stop_event.set()
+    response_done.set()
 
 
 if __name__ == "__main__":
