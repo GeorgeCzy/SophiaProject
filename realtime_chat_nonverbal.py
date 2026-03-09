@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import json
 import os
 import ssl
@@ -9,7 +9,7 @@ import websocket
 
 
 # ===== Settings ==========================================================
-API_KEY = os.getenv("OPENAI_API_KEY")
+API_KEY = os.getenv("OMG_API_KEY")
 if not API_KEY:
     raise RuntimeError("invalid API key")
 
