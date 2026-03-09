@@ -143,11 +143,11 @@ def on_message(ws, message):
         response_chunks.append(delta)
 
     elif t == "response.done":
-        response_done.set()
         full_text = "".join(response_chunks).strip()
         output_text = finalize_response_text(full_text)
         print("LLM:", flush=True)
         print(output_text, flush=True)
+        response_done.set()
         if single_input_text is not None:
             stop_event.set()
             ws.close()
