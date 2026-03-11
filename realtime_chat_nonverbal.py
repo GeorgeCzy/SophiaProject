@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import subprocess
 import ssl
@@ -9,7 +9,7 @@ import websocket
 
 
 # ===== Settings ==========================================================
-API_KEY = os.getenv("OMG_API_KEY")
+API_KEY = os.getenv("OHMYGPT_API_KEY")
 if not API_KEY:
     raise RuntimeError("invalid API key")
 
