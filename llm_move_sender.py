@@ -47,7 +47,7 @@ def to_axisangle(val, index: int):
             return [v * 0.3, 0.0, -v]
         if index in (53, 54):
             return [v, 0.2 * v, -v]
-        return [0.0, v, 0.0]
+        return [0.0, v, 0.0] # neckRotation falls for this case
 
     if len(val) == 2:
         x, y = float(val[0]), float(val[1])
@@ -91,6 +91,7 @@ ACTUATOR_TO_INDEX = {
     "RightRingFinger": 49,
     "RightThumbRoll": 52,
     "RightThumbFinger": 52,
+    "NeckRotation": 60,
 }
 
 # Composite indices: (index, order) -> actuator name for building (v1, v2) tuple
@@ -104,7 +105,7 @@ COMPOSITE_INDEX_PARTS = {
 }
 
 # All robot indices we send (deterministic order). Unspecified joints default to 0.
-ALL_INDICES = [16, 17, 18, 19, 20, 21, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52]
+ALL_INDICES = [16, 17, 18, 19, 20, 21, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52, 60]
 
 # A-pose startup bias. Reset to this pose after motions complete. Remove/comment entries for motor=0.
 def deg(d: float) -> float:

@@ -58,16 +58,17 @@ DEFAULT_LIMITS: Dict[str, Tuple[float, float]] = {
     "LeftMiddleFinger": (deg(-18), deg(132)),
     "LeftRingFinger": (deg(-18), deg(136)),
     "LeftPinkyFinger": (deg(-4), deg(75)),
+    "NeckRotation": (deg(-40), deg(40)),
 }
 
 LIMITS = DEFAULT_LIMITS
 
 # A-pose startup bias. Remove/comment entries if you want motor=0 pose instead.
 OFFSET: Dict[str, float] = {
-    "RightShoulderRoll": deg(45.0),
-    "RightElbowPitch": deg(-127.0),
-    "LeftShoulderRoll": deg(-45.0),
-    "LeftElbowPitch": deg(127.0),
+    # "RightShoulderRoll": deg(45.0),
+    # "RightElbowPitch": deg(-127.0),
+    # "LeftShoulderRoll": deg(-45.0),
+    # "LeftElbowPitch": deg(127.0),
 }
 
 
@@ -156,6 +157,9 @@ INDEX_MAP: Dict[int, List[ActuatorCmd]] = {
     52: [
         ActuatorCmd("RightThumbRoll", lambda v: _need_vec3(v)[0]),
         ActuatorCmd("RightThumbFinger", lambda v: _need_vec3(v)[2]),
+    ],
+    60: [
+        ActuatorCmd("NeckRotation", lambda v: _need_vec3(v)[1]),
     ],
 }
 

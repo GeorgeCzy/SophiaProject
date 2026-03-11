@@ -144,5 +144,11 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "LeftShoulderYaw": 40,
         "LeftElbowPitch": 13,
         "LeftElbowYaw": -90,
-    }
+    },
+    "lookToTheLeft": {
+        "NeckRotation": -40,
+    },
+    "lookToTheRight": {
+        "NeckRotation": 40,
+    },
 }
