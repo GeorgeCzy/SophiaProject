@@ -17,6 +17,8 @@ leftHandWaveRight
 idea
 rightHandReachOut
 shrug
+lookToTheLeft
+lookToTheRight
 
 Output format rules (strict):
 1) Plain text only.
