@@ -1,145 +1,239 @@
 #!/usr/bin/env python3
+"""
+Read action pairs ["action name", "time"] from text and send to robot via Sophia_control.
+Uses motion_repo for preset poses and Sophia_control.call_remote (same as smpl_visualizer).
+"""
+
 import argparse
 import json
-import socket
+import math
+import re
 import sys
 import time
-from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
+import Sophia_control
 
-# Map actuator -> (server index, vector component in [x, y, z]).
-ACTUATOR_TO_INDEX_COMPONENT: Dict[str, Tuple[int, int]] = {
-    "LeftShoulderPitch": (16, 0),
-    "LeftShoulderRoll": (16, 2),
-    "RightShoulderPitch": (17, 0),
-    "RightShoulderRoll": (17, 2),
-    "LeftShoulderYaw": (18, 0),
-    "LeftElbowPitch": (18, 1),
-    "RightShoulderYaw": (19, 0),
-    "RightElbowPitch": (19, 1),
-    "LeftElbowYaw": (20, 0),
-    "RightElbowYaw": (21, 0),
-    "LeftIndexFinger": (25, 2),
-    "LeftMiddleFinger": (28, 2),
-    "LeftPinkyFinger": (31, 2),
-    "LeftRingFinger": (34, 2),
-    "LeftThumbRoll": (37, 0),
-    "LeftThumbFinger": (37, 2),
-    "RightIndexFinger": (40, 2),
-    "RightMiddleFinger": (43, 2),
-    "RightPinkyFinger": (46, 2),
-    "RightRingFinger": (49, 2),
-    "RightThumbRoll": (52, 0),
-    "RightThumbFinger": (52, 2),
+try:
+    from motion_repo import get_motion, MOTIONS
+except ImportError:
+    get_motion = None
+    MOTIONS = {}
+
+
+def deg2rad(deg: float) -> float:
+    return deg * math.pi / 180.0
+
+
+def to_axisangle(val, index: int):
+    """Convert motion_repo value to axis-angle [x,y,z] for Sophia_control. Same logic as smpl_visualizer."""
+    if isinstance(val, (int, float)):
+        v = float(val)
+        if index in (25, 26, 27, 28, 29, 30):
+            return [0.0, 0.0, v]
+        if index in (31, 32, 33):
+            return [v, 0.0, v]
+        if index in (34, 35, 36):
+            return [v * 0.3, 0.0, v]
+        if index in (20, 21):
+            return [v, 0.0, 0.0]
+        if index in (38, 39):
+            return [v, 0.2 * v, -v]
+        if index in (40, 41, 42, 43, 44, 45):
+            return [0.0, 0.0, -v]
+        if index in (46, 47, 48):
+            return [v, 0.0, -v]
+        if index in (49, 50, 51):
+            return [v * 0.3, 0.0, -v]
+        if index in (53, 54):
+            return [v, 0.2 * v, -v]
+        return [0.0, v, 0.0]
+
+    if len(val) == 2:
+        x, y = float(val[0]), float(val[1])
+        if index == 16:
+            return [x, 0.2 * x, y]
+        if index == 17:
+            return [x, -0.2 * x, y]
+        if index == 18:
+            return [0.1 * x, y, -x]
+        if index == 19:
+            return [x, y, x]
+        if index == 37:
+            return [x, y, y]
+        if index == 52:
+            return [x, y, y]
+    return list(val)
+
+
+# Mapping: motion_repo actuator name -> (SMPL index, component in composite index)
+# For composite indices (16,17,18,19,37,52), we collect all components and build value together.
+ACTUATOR_TO_INDEX = {
+    "LeftShoulderPitch": 16,
+    "LeftShoulderRoll": 16,
+    "RightShoulderPitch": 17,
+    "RightShoulderRoll": 17,
+    "LeftShoulderYaw": 18,
+    "LeftElbowPitch": 18,
+    "RightShoulderYaw": 19,
+    "RightElbowPitch": 19,
+    "LeftElbowYaw": 20,
+    "RightElbowYaw": 21,
+    "LeftIndexFinger": 25,
+    "LeftMiddleFinger": 28,
+    "LeftPinkyFinger": 31,
+    "LeftRingFinger": 34,
+    "LeftThumbRoll": 37,
+    "LeftThumbFinger": 37,
+    "RightIndexFinger": 40,
+    "RightMiddleFinger": 43,
+    "RightPinkyFinger": 46,
+    "RightRingFinger": 49,
+    "RightThumbRoll": 52,
+    "RightThumbFinger": 52,
+}
+
+# Composite indices: (index, order) -> actuator name for building (v1, v2) tuple
+COMPOSITE_INDEX_PARTS = {
+    16: ("LeftShoulderPitch", "LeftShoulderRoll"),
+    17: ("RightShoulderPitch", "RightShoulderRoll"),
+    18: ("LeftShoulderYaw", "LeftElbowPitch"),
+    19: ("RightShoulderYaw", "RightElbowPitch"),
+    37: ("LeftThumbRoll", "LeftThumbFinger"),
+    52: ("RightThumbRoll", "RightThumbFinger"),
+}
+
+# All robot indices we send (deterministic order). Unspecified joints default to 0.
+ALL_INDICES = [16, 17, 18, 19, 20, 21, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52]
+
+# A-pose startup bias. Reset to this pose after motions complete. Remove/comment entries for motor=0.
+def deg(d: float) -> float:
+    return d * math.pi / 180.0
+
+
+A_POSE_OFFSET: Dict[str, float] = {
+    # "RightShoulderRoll": deg(45.0),
+    # "RightElbowPitch": deg(-127.0),
+    # "LeftShoulderRoll": deg(-45.0),
+    # "LeftElbowPitch": deg(127.0),
 }
 
 
-@dataclass
-class MoveCmd:
-    actuator: str
-    delta_rad: float
-    duration_s: float
-    raw_line: str
+def motion_to_robot_commands(angles_deg: dict) -> List[Tuple[int, list]]:
+    """Convert motion_repo angles (degrees) to (index, value) for Sophia_control.call_remote.
+    Unspecified joints are set to 0 (per motion_repo spec: 'all other motors to 0').
+    """
+    index_values: dict = {}
+    for idx in ALL_INDICES:
+        if idx in COMPOSITE_INDEX_PARTS:
+            index_values[idx] = [0.0, 0.0]
+        else:
+            index_values[idx] = 0.0
 
-
-def parse_llm_output(text: str) -> Tuple[str, List[MoveCmd]]:
-    summary = ""
-    moves: List[MoveCmd] = []
-
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line:
+    for actuator, deg in angles_deg.items():
+        if actuator not in ACTUATOR_TO_INDEX:
             continue
-        if line.startswith("SUMMARY|"):
-            summary = line.split("|", 1)[1].strip()
+        idx = ACTUATOR_TO_INDEX[actuator]
+        rad = deg2rad(deg)
+
+        if idx in COMPOSITE_INDEX_PARTS:
+            parts = COMPOSITE_INDEX_PARTS[idx]
+            arr = index_values[idx]
+            if actuator == parts[0]:
+                arr[0] = rad
+            elif actuator == parts[1]:
+                arr[1] = rad
+        else:
+            index_values[idx] = rad
+
+    commands = []
+    for idx in ALL_INDICES:
+        val = index_values[idx]
+        if isinstance(val, list):
+            value = to_axisangle(tuple(val), idx)
+        else:
+            value = to_axisangle(val, idx)
+        commands.append((idx, value))
+    return commands
+
+
+
+def parse_action_pairs(text: str) -> List[Tuple[str, float]]:
+    """
+    Parse action pairs from text. Supports:
+    - JSON: [["thumbup", 2.0], ["wave", 1.5]]
+    - Line-based: "thumbup 2.0" or "thumbup\t2.0" per line
+    """
+    text = text.strip()
+    if not text:
+        raise ValueError("Empty input for action pairs.")
+
+    try:
+        data = json.loads(text)
+        if isinstance(data, list):
+            pairs = []
+            for item in data:
+                if isinstance(item, (list, tuple)) and len(item) >= 2:
+                    name = str(item[0]).strip()
+                    dur = float(item[1])
+                    if dur < 0:
+                        raise ValueError(f"Duration must be >= 0: {item}")
+                    pairs.append((name, dur))
+                else:
+                    raise ValueError(f"Invalid action pair: {item}")
+            if pairs:
+                return pairs
+    except json.JSONDecodeError:
+        pass
+
+    pairs = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
             continue
-        if not line.startswith("MOVE|"):
-            continue
+        m = re.match(r"(\S+)\s+([\d.]+)", line)
+        if m:
+            name = m.group(1).strip()
+            dur = float(m.group(2))
+            if dur < 0:
+                raise ValueError(f"Duration must be >= 0: {line}")
+            pairs.append((name, dur))
+        else:
+            raise ValueError(f"Invalid action line (expected 'name duration'): {line}")
 
-        parts = line.split("|")
-        if len(parts) != 4:
-            raise ValueError(f"Invalid MOVE format: {line}")
-
-        actuator = parts[1].strip()
-        if actuator not in ACTUATOR_TO_INDEX_COMPONENT:
-            raise ValueError(
-                f"Unsupported actuator in MOVE line: {actuator}. "
-                "This TCP mapping does not expose every actuator name."
-            )
-
-        try:
-            delta_rad = float(parts[2].strip())
-            duration_s = float(parts[3].strip())
-        except ValueError as exc:
-            raise ValueError(f"Invalid numeric value in MOVE line: {line}") from exc
-
-        if duration_s < 0:
-            raise ValueError(f"duration_s must be >= 0 in MOVE line: {line}")
-
-        moves.append(
-            MoveCmd(
-                actuator=actuator,
-                delta_rad=delta_rad,
-                duration_s=duration_s,
-                raw_line=line,
-            )
-        )
-
-    if not moves:
-        raise ValueError("No MOVE lines found.")
-
-    return summary, moves
+    if not pairs:
+        raise ValueError("No action pairs found.")
+    return pairs
 
 
-def send_one(host: str, port: int, index: int, value_xyz: List[float], timeout_s: float) -> Dict:
-    payload = {"index": index, "value": value_xyz}
-    data = json.dumps(payload).encode("utf-8")
-
-    with socket.create_connection((host, port), timeout=timeout_s) as sock:
-        sock.sendall(data)
-        raw = sock.recv(4096)
-
-    if not raw:
-        raise RuntimeError("Empty response from robot TCP server.")
-
-    resp = json.loads(raw.decode("utf-8"))
-    if not isinstance(resp, dict):
-        raise RuntimeError(f"Invalid response payload: {resp}")
-    if resp.get("code") != 0:
-        raise RuntimeError(f"Robot server error: {resp}")
-    return resp
-
-
-def run_moves(
+def run_actions(
+    pairs: List[Tuple[str, float]],
     host: str,
     port: int,
-    timeout_s: float,
-    moves: List[MoveCmd],
+    timeout: float,
     dry_run: bool,
 ) -> None:
-    actuator_state: Dict[str, float] = {}
-    index_state: Dict[int, List[float]] = {}
+    """Execute action presets: send to robot and hold for duration."""
+    if not get_motion:
+        raise RuntimeError("motion_repo not available. Ensure motion_repo.py is in the same directory.")
 
-    for i, move in enumerate(moves, start=1):
-        idx, comp = ACTUATOR_TO_INDEX_COMPONENT[move.actuator]
-        actuator_state[move.actuator] = actuator_state.get(move.actuator, 0.0) + move.delta_rad
+    for i, (action_name, duration_s) in enumerate(pairs, start=1):
+        if action_name not in MOTIONS:
+            raise KeyError(f"Unknown motion: {action_name}. Available: {list(MOTIONS.keys())}")
 
-        vec = index_state.get(idx, [0.0, 0.0, 0.0])
-        vec[comp] = actuator_state[move.actuator]
-        index_state[idx] = vec
+        angles_deg = get_motion(action_name)
+        commands = motion_to_robot_commands(angles_deg)
 
-        print(
-            f"[{i}/{len(moves)}] {move.actuator}: delta={move.delta_rad:+.4f} rad "
-            f"-> index={idx}, value={vec}, hold={move.duration_s:.3f}s"
-        )
+        print(f"[{i}/{len(pairs)}] {action_name}: hold {duration_s:.3f}s")
 
-        if not dry_run:
-            resp = send_one(host, port, idx, vec, timeout_s)
-            print(f"  server_ack: {resp.get('result')}")
+        for idx, value in commands:
+            if dry_run:
+                print(f"  [DRY] index={idx} value={value}")
+            else:
+                Sophia_control.call_remote(index=idx, value=value, host=host, port=port, timeout=timeout)
 
-        if move.duration_s > 0:
-            time.sleep(move.duration_s)
+        if duration_s > 0:
+            time.sleep(duration_s)
 
 
 def read_text(input_file: str) -> str:
@@ -149,41 +243,34 @@ def read_text(input_file: str) -> str:
     return sys.stdin.read()
 
 
-def parse_args() -> argparse.Namespace:
+def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Parse LLM SUMMARY/MOVE output and send TCP requests to Sophia body bridge."
+        description="Read action pairs from text and send to robot via Sophia_control."
     )
-    parser.add_argument("--host", default="127.0.0.1", help="Robot TCP host.")
+    parser.add_argument("--host", default="10.0.0.10", help="Robot TCP host (default: 10.0.0.10).")
     parser.add_argument("--port", type=int, default=5005, help="Robot TCP port.")
-    parser.add_argument("--timeout", type=float, default=2.0, help="Socket timeout seconds.")
+    parser.add_argument("--timeout", type=float, default=5.0, help="Socket timeout seconds.")
     parser.add_argument(
         "--input-file",
         default="",
-        help="Path to a text file containing LLM output. If omitted, read from stdin.",
+        help="Path to text file. If omitted, read from stdin.",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Parse and print outgoing requests without sending to TCP server.",
+        help="Parse and print without sending to robot.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
 
-
-def main() -> int:
-    args = parse_args()
     text = read_text(args.input_file)
-    summary, moves = parse_llm_output(text)
+    pairs = parse_action_pairs(text)
+    print(f"Actions: {pairs}")
 
-    if summary:
-        print(f"Summary: {summary}")
-    else:
-        print("Summary: (none)")
-
-    run_moves(
+    run_actions(
+        pairs=pairs,
         host=args.host,
         port=args.port,
-        timeout_s=args.timeout,
-        moves=moves,
+        timeout=args.timeout,
         dry_run=args.dry_run,
     )
     print("Done.")
