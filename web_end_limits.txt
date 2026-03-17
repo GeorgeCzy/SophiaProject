@@ -1,0 +1,21 @@
+This is the parameters that set the virtual figure to the limit pose of the real robot.
+Left Shoulder Pitch: -1.8, 0.1 (minimum TBD)
+Left Shoulder Roll: -0.55(close to body), 0.45
+
+Right Shoulder Pitch: -1.8, 0.1 (minimum TBD)
+Right Shoulder Roll: -0.45, 0.55(close to body)
+
+Left Elbow Yaw: -1.45(same orientation with elbow bend diretion), 1.7
+Right Elbow Yaw: -1.45(same orientation with elbow bend diretion). 1.7
+
+
+--------- SKIP----------------
+
+Left Index Finger:  -0.6, 0.1(outward)
+Left Middle Finger: -0.8, 0(outward)
+Left Ring Finger: -0.95, 0(outward)
+Left Pinkie Finger: -0.6, 0(outward)
+
+
+smpl_visualizer: get increment and compose them into vectore
+tcp_web: extractor: extract the needed dimansion of the vector and then plus base bias to convert increment to absolute angle

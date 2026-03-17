@@ -110,14 +110,16 @@ OFFSET = { #used for customize
 }
 
 GAIN = { # used for matching the amount of displacement between web-end pose and real robot
-    "RightShoulderPitch": 0.95,
-    "LeftShoulderPitch": 0.95,
+    "RightShoulderPitch": 1.2,
+    "LeftShoulderPitch": 1.2,
     "RightElbowPitch": 1.75,
     "LeftElbowPitch": 1.75,
     "LeftShoulderYaw": 10.0,
     "RightShoulderRoll": 1.5,
     "LeftShoulderRoll": 1.5,
-}
+} 
+# to improve mapping by setting gains is not good, because, the range limits of robots is not symmetric, like -15degrees to 120 degrees, you can't use only one constant GAIN
+
 
 def send_t_pose(pose_pub, limit, repeats=10, dt=0.1):
     """
@@ -224,6 +226,34 @@ INDEX_MAP: Dict[int, List[ActuatorCmd]] = {
     49: [ActuatorCmd("RightRingFinger",   lambda v: _need_vec3(v)[2])],
 }
 
+CALLIBRATION_INDEX = {16,17,20,21}
+CALLIBRATION_LIM : Dict[int, Tuple[float, float]] = {  # everything in rad
+    161: [-1.8, 0.1],
+    162: [-0.55, 0.45],
+    171: [-1.8, 0.1],
+    172: [-0.45, 0.55],
+    20: [-1.45, 1.7],
+    21: [-1.45, 1.7],
+}
+def map_slider_to_robot(raw_value, index):
+    lo_robot = 0
+    hi_robot = 0
+    if index == 161:
+        lo_robot, hi_robot = LIMITS["LeftShoulderPitch"]
+    elif index == 162:
+        lo_robot, hi_robot = LIMITS["LeftShoulderRoll"]
+    elif index == 171:
+        lo_robot, hi_robot = LIMITS["RightShoulderPitch"]
+    elif index == 172:
+        lo_robot, hi_robot = LIMITS["RightShoulderRoll"]
+    elif index == 20:
+        lo_robot, hi_robot = LIMITS["LeftElbowYaw"]
+    elif index == 21:
+        lo_robot, hi_robot = LIMITS["RightElbowYaw"]
+    lo_slider, hi_slider = CALLIBRATION_LIM[index]
+    raw_value = max(lo_slider, min(raw_value, hi_slider)) # regularize the input
+    scale = (hi_robot - lo_robot) / (hi_slider - lo_slider)
+    return raw_value * scale
 
 # ----------------------------
 # Server implementation
@@ -298,11 +328,27 @@ class BodyBridgeServer:
                     self._send(conn, code=3, error=f"no limits for actuator {c.actuator}")
                     return
 
-                delta = float(c.extractor(value)) * GLOBAL_SCALE
+                delta = float(c.extractor(value)) * GLOBAL_SCALE # get increment
+                raw_val = float(c.extractor(value))
+                if c.actuator == "LeftShoulderPitch":
+                    delta = map_slider_to_robot(raw_val, 161)
+                elif c.actuator == "LeftShoulderRoll":
+                    delta = map_slider_to_robot(raw_val, 162)
+                elif c.actuator == "RightShoulderPitch":
+                    delta = map_slider_to_robot(raw_val, 171)
+                elif c.actuator == "RightShoulderRoll":
+                    delta = map_slider_to_robot(raw_val, 172)
+                elif c.actuator == "LeftElbowYaw":
+                    delta = map_slider_to_robot(raw_val, 20)
+                elif c.actuator == "RightElbowYaw":
+                    delta = map_slider_to_robot(raw_val, 21)
+
+                else:
+                  
+                  delta *= float(GAIN.get(c.actuator, 1.0)) # magnify rotation for certain motors
+                  # v = clamp(c.actuator, v)
                 delta = delta * float(SIGN.get(c.actuator, -1.0)) # used magic number to match the moving direction of fingers
                 # reason for this might be some inconsistency in to_axisangle in smpl_visualizer.py
-                delta *= float(GAIN.get(c.actuator, 1.0)) # magnify rotation for certain motors
-                # v = clamp(c.actuator, v)
                 base_bias = float(OFFSET.get(c.actuator, 0.0))
                 v = clamp(c.actuator, base_bias + delta)
                 names.append(c.actuator)
