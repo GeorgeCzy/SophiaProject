@@ -320,7 +320,8 @@ MOTION_SEQUENCES = {
 
       # 10. Right index finger = 0
       (0.5, {40: 0.0}),
-  ] 
+  ],
+  
 }
 def main(model_path: Path) -> None:
     # ————————————————————————————————————————
