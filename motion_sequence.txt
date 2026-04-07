@@ -1,0 +1,79 @@
+"Arm_Joint_Limit_Sweep": [
+    # Neutral
+    (0.8, {
+        16: (0.0, 0.0),  # LeftShoulderPitch, LeftShoulderRoll
+        17: (0.0, 0.0),  # RightShoulderPitch, RightShoulderRoll
+        18: (0.0, 0.0),  # LeftShoulderYaw, LeftElbowPitch
+        19: (0.0, 0.0),  # RightShoulderYaw, RightElbowPitch
+        20: deg(0),      # LeftElbowYaw
+        21: deg(0),      # RightElbowYaw
+    }),
+
+    # ------------------------------------------------------------------
+    # RightShoulderPitch: 35 -> -145 -> 0
+    # joint 17 = (RightShoulderPitch, RightShoulderRoll)
+    # ------------------------------------------------------------------
+    (0.6, {17: (deg(35), 0.0)}),
+    (0.6, {17: (deg(-145), 0.0)}),
+    (0.6, {17: (deg(0), 0.0)}),
+
+    # RightShoulderRoll: 101 -> -4 -> 0
+    (0.6, {17: (0.0, deg(101))}),
+    (0.6, {17: (0.0, deg(-4))}),
+    (0.6, {17: (0.0, deg(0))}),
+
+    # RightShoulderYaw: 83 -> -66 -> 0
+    # joint 19 = (RightShoulderYaw, RightElbowPitch)
+    (0.6, {19: (deg(83), 0.0)}),
+    (0.6, {19: (deg(-66), 0.0)}),
+    (0.6, {19: (deg(0), 0.0)}),
+
+    # RightElbowPitch: 119 -> -127 -> 0
+    (0.6, {19: (0.0, deg(119))}),
+    (0.6, {19: (0.0, deg(-127))}),
+    (0.6, {19: (0.0, deg(0))}),
+
+    # RightElbowYaw: 123 -> -123 -> 0
+    (0.6, {21: deg(123)}),
+    (0.6, {21: deg(-123)}),
+    (0.6, {21: deg(0)}),
+
+    # ------------------------------------------------------------------
+    # LeftShoulderPitch: 145 -> -35 -> 0
+    # joint 16 = (LeftShoulderPitch, LeftShoulderRoll)
+    # ------------------------------------------------------------------
+    (0.6, {16: (deg(145), 0.0)}),
+    (0.6, {16: (deg(-35), 0.0)}),
+    (0.6, {16: (deg(0), 0.0)}),
+
+    # LeftShoulderRoll: 4 -> -101 -> 0
+    (0.6, {16: (0.0, deg(4))}),
+    (0.6, {16: (0.0, deg(-101))}),
+    (0.6, {16: (0.0, deg(0))}),
+
+    # LeftShoulderYaw: 66 -> -83 -> 0
+    # joint 18 = (LeftShoulderYaw, LeftElbowPitch)
+    (0.6, {18: (deg(66), 0.0)}),
+    (0.6, {18: (deg(-83), 0.0)}),
+    (0.6, {18: (deg(0), 0.0)}),
+
+    # LeftElbowPitch: 127 -> -119 -> 0
+    (0.6, {18: (0.0, deg(127))}),
+    (0.6, {18: (0.0, deg(-119))}),
+    (0.6, {18: (0.0, deg(0))}),
+
+    # LeftElbowYaw: 123 -> -123 -> 0
+    (0.6, {20: deg(123)}),
+    (0.6, {20: deg(-123)}),
+    (0.6, {20: deg(0)}),
+
+    # Final neutral
+    (0.8, {
+        16: (0.0, 0.0),
+        17: (0.0, 0.0),
+        18: (0.0, 0.0),
+        19: (0.0, 0.0),
+        20: deg(0),
+        21: deg(0),
+    }),
+]

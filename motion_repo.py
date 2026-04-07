@@ -135,6 +135,10 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "RightShoulderPitch": -111,
         "RightElbowPitch": -127,
     },
+    "leftHandReachOut":{
+        "LeftShoulderPitch": 111,
+        "LeftElbowPitch": 127,
+    },
     "spreadHands": {
         "RightShoulderPitch": -35,
         "RightShoulderYaw": -40,
@@ -210,6 +214,16 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "LeftMiddleFinger": -18,
         "LeftRingFinger": -18,
         "LeftPinkyFinger": -4,
+    },
+    "rightArmLiftFlat":{
+        "RightShoulderPitch": -145,
+        "RightElbowPitch": -127,
+
+    },
+    "leftArmLiftFlat":{
+        "LeftShoulderPitch": 145,
+        "LeftElbowPitch": 127,
+
     },
 
 }
