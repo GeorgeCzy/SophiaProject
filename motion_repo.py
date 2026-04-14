@@ -256,7 +256,7 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "RightShoulderYaw": -66,
     },
     "rightArmStretchAndRaise":{
-        "RightShoulderRoll": 101,
+        "RightShoulderRoll": 90,
         "RightShoulderYaw": -66,
         "RightElbowPitch": -127,
         "RightElbowYaw": 123,
