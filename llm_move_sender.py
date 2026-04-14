@@ -56,7 +56,7 @@ def to_axisangle(val, index: int):
         if index == 17:
             return [x, -0.2 * x, y]
         if index == 18:
-            return [0.1 * x, y, -x]
+            return [x, y, -x]
         if index == 19:
             return [x, y, x]
         if index == 37:
