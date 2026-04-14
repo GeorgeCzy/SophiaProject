@@ -122,10 +122,14 @@ A_POSE_OFFSET: Dict[str, float] = {
 
 def motion_to_robot_commands(angles_deg: dict) -> List[Tuple[int, list]]:
     """Convert motion_repo angles (degrees) to (index, value) for Sophia_control.call_remote.
-    Unspecified joints are set to 0 (per motion_repo spec: 'all other motors to 0').
+    Unspecified joints are leaved.
     """
+    involved_indices = set()
+    for actuator in angles_deg:
+        if actuator in ACTUATOR_TO_INDEX:
+            involved_indices.add(ACTUATOR_TO_INDEX[actuator])
     index_values: dict = {}
-    for idx in ALL_INDICES:
+    for idx in involved_indices:
         if idx in COMPOSITE_INDEX_PARTS:
             index_values[idx] = [0.0, 0.0]
         else:
@@ -148,7 +152,7 @@ def motion_to_robot_commands(angles_deg: dict) -> List[Tuple[int, list]]:
             index_values[idx] = rad
 
     commands = []
-    for idx in ALL_INDICES:
+    for idx in involved_indices:
         val = index_values[idx]
         if isinstance(val, list):
             value = to_axisangle(tuple(val), idx)
@@ -188,11 +192,12 @@ def parse_action_pairs(text: str) -> List[Tuple[str, float]]:
         pass
 
     pairs = []
+    line_pattern = re.compile(r'^"?([A-Za-z][A-Za-z0-9_]*)"?\s*,?\s*"?([0-9]+(?:\.[0-9]+)?)"?$')
     for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        m = re.match(r"(\S+)\s+([\d.]+)", line)
+        m = line_pattern.match(line)
         if m:
             name = m.group(1).strip()
             dur = float(m.group(2))
@@ -218,10 +223,22 @@ def run_actions(
     if not get_motion:
         raise RuntimeError("motion_repo not available. Ensure motion_repo.py is in the same directory.")
 
+    # Force a known neutral start state: all controlled motors receive zero command.
+    zero_commands = [(idx, [0.0, 0.0, 0.0]) for idx in ALL_INDICES]
+    print("[INIT] reset all controlled motors to zero")
+    for idx, value in zero_commands:
+        if dry_run:
+            print(f"  [DRY][INIT] index={idx} value={value}")
+        else:
+            Sophia_control.call_remote(index=idx, value=value, host=host, port=port, timeout=timeout)
+    time.sleep(0.1)
+
     for i, (action_name, duration_s) in enumerate(pairs, start=1):
         if action_name not in MOTIONS:
             raise KeyError(f"Unknown motion: {action_name}. Available: {list(MOTIONS.keys())}")
-
+        if action_name == "stay":
+            time.sleep(duration_s)
+            continue
         angles_deg = get_motion(action_name)
         commands = motion_to_robot_commands(angles_deg)
 
