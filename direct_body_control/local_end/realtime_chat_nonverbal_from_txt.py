@@ -49,7 +49,9 @@ APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip()
     "yes",
     "on",
 }
-MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "direct").strip().lower()
+MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "standard_index").strip().lower()
+STANDARD_ROBOT_HOST = os.getenv("SOPHIA_STANDARD_ROBOT_HOST", "10.0.0.10")
+STANDARD_ROBOT_PORT = int(os.getenv("SOPHIA_STANDARD_ROBOT_PORT", "5005"))
 DIRECT_ROBOT_HOST = os.getenv("SOPHIA_DIRECT_ROBOT_HOST", "10.0.0.10")
 DIRECT_ROBOT_PORT = int(os.getenv("SOPHIA_DIRECT_ROBOT_PORT", "5006"))
 LEGACY_ROBOT_HOST = os.getenv("SOPHIA_LEGACY_ROBOT_HOST", "10.0.0.10")
@@ -236,7 +238,19 @@ def run_move_sender():
             )
             return
         time.sleep(0.1)
-    if MOTION_SENDER == "direct":
+    if MOTION_SENDER in {"standard", "standard_index", "index"}:
+        sender_cmd = [
+            sys.executable,
+            "standard_index_motion_sender.py",
+            "--input-file",
+            "actions.txt",
+            "--host",
+            STANDARD_ROBOT_HOST,
+            "--port",
+            str(STANDARD_ROBOT_PORT),
+        ]
+        sender_name = "standard_index_motion_sender.py"
+    elif MOTION_SENDER == "direct":
         sender_cmd = [
             sys.executable,
             "direct_motion_sender.py",
@@ -261,7 +275,11 @@ def run_move_sender():
         ]
         sender_name = "llm_move_sender.py"
     else:
-        print(f"Unknown SOPHIA_MOTION_SENDER={MOTION_SENDER!r}; expected direct or legacy.", flush=True)
+        print(
+            f"Unknown SOPHIA_MOTION_SENDER={MOTION_SENDER!r}; "
+            "expected standard_index, direct, or legacy.",
+            flush=True,
+        )
         return
 
     try:
@@ -498,7 +516,9 @@ if __name__ == "__main__":
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
-    if MOTION_SENDER == "direct":
+    if MOTION_SENDER in {"standard", "standard_index", "index"}:
+        print(f"STANDARD_ROBOT = {STANDARD_ROBOT_HOST}:{STANDARD_ROBOT_PORT}")
+    elif MOTION_SENDER == "direct":
         print(f"DIRECT_ROBOT = {DIRECT_ROBOT_HOST}:{DIRECT_ROBOT_PORT}")
     else:
         print(f"LEGACY_ROBOT = {LEGACY_ROBOT_HOST}:{LEGACY_ROBOT_PORT}")
