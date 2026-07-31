@@ -76,7 +76,7 @@ python main.py
 Dry run:
 
 ```powershell
-python llm_move_sender.py --input-file actions.example.txt --dry-run
+python llm_move_sender.py --input-file actions.txt --dry-run
 ```
 
 Quick robot test:
