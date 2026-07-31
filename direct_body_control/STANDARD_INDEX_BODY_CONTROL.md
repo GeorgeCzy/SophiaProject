@@ -1,7 +1,9 @@
 # Standard Index Body Control
 
-This is the recommended path when using the existing robot-end
+Use this only for comparison with the existing robot-end
 `bodycontrol_tcp_standard.py`.
+
+For one-index/one-radian motor control, use `SCALAR_INDEX_BODY_CONTROL.md`.
 
 It keeps the original robot-end packet format:
 
@@ -12,6 +14,9 @@ It keeps the original robot-end packet format:
 but avoids the old local SMPL/axis-angle conversion. The local sender writes
 the motion keyframe angles directly into the vector slots that
 `bodycontrol_tcp_standard.py` extracts.
+
+That means this path removes `to_axisangle()`, but it does not remove the old
+3D vector slots from the robot-end bridge.
 
 ## Robot End
 

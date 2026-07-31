@@ -12,21 +12,29 @@ LLM action -> motion_repo keyframe -> SMPL/index mapping -> axis-angle value -> 
 The recommended path now is:
 
 ```text
-LLM action -> motion_repo keyframe -> standard index packet with direct radians -> bodycontrol_tcp_standard.py
+LLM action -> motion_repo keyframe -> scalar motor-index packet -> bodycontrol_tcp_scalar_index.py
 ```
 
-This keeps the original `bodycontrol_tcp_standard.py` robot-end protocol, but
-removes the local SMPL/axis-angle conversion.
+This uses one integer motor index and one scalar radian value per motor. It
+does not send `[x, y, z]` vectors.
 
 ## Recommended Robot End
 
-Run your existing standard bridge on the robot:
+Copy these files to the robot:
 
-```bash
-python3 bodycontrol_tcp_standard.py
+```text
+robot_end/bodycontrol_tcp_scalar_index.py
+robot_end/scalar_index_protocol.py
+robot_end/direct_robot_protocol.py
 ```
 
-Default port: `5005`.
+Run the scalar-index bridge:
+
+```bash
+python3 bodycontrol_tcp_scalar_index.py --port 5007
+```
+
+Default port: `5007`.
 
 ## Recommended Local End
 
@@ -37,7 +45,8 @@ local_end/realtime_chat_nonverbal_from_txt.py
 local_end/nonverbal_motion_agent.py
 local_end/system_prompt.txt
 local_end/motion_repo.py
-local_end/standard_index_motion_sender.py
+local_end/scalar_index_motion_sender.py
+local_end/scalar_index_protocol.py
 local_end/direct_robot_protocol.py
 ```
 
@@ -45,9 +54,9 @@ For the full speech + motion loop, place/copy the local-end files into the
 same folder that contains `Sophia_Face_HCI/`, then run:
 
 ```powershell
-$env:SOPHIA_MOTION_SENDER="standard_index"
-$env:SOPHIA_STANDARD_ROBOT_HOST="10.0.0.10"
-$env:SOPHIA_STANDARD_ROBOT_PORT="5005"
+$env:SOPHIA_MOTION_SENDER="scalar_index"
+$env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
+$env:SOPHIA_SCALAR_ROBOT_PORT="5007"
 python realtime_chat_nonverbal_from_txt.py
 ```
 
@@ -61,30 +70,50 @@ python main.py
 Quick dry run:
 
 ```powershell
-python standard_index_motion_sender.py --input-file actions.example.txt --dry-run
+python scalar_index_motion_sender.py --input-file actions.example.txt --dry-run
 ```
 
 Quick robot test:
 
 ```powershell
-"rightHandRaise 0.5`nstandby 0.5" | python standard_index_motion_sender.py --host 10.0.0.10 --port 5005
+"rightHandRaise 0.5`nstandby 0.5" | python scalar_index_motion_sender.py --host 10.0.0.10 --port 5007
 ```
 
-## What The Standard-Index Sender Does
+## Motor Index Map
 
-It sends the same packet shape expected by `bodycontrol_tcp_standard.py`:
+The default map is in `scalar_index_protocol.py` and assigns `0..N` to the
+actuator names used by `motion_repo.py`.
+
+If the robot has an official motor-index table, put it in a JSON file and pass
+the same file to both ends:
 
 ```json
-{"index":17,"value":[-1.2217,0.0,0.0]}
+{"0":"RightShoulderPitch","1":"RightShoulderRoll"}
 ```
 
-But it fills the vector directly from `motion_repo.py` angles:
+Robot:
 
-```text
-RightShoulderPitch -70 degrees -> index 17 slot 0 -> -1.2217 radians
+```bash
+python3 bodycontrol_tcp_scalar_index.py --port 5007 --motor-map motor_index_map.json
 ```
 
-There is no SMPL-X interpretation and no fake axis-angle vector.
+Local:
+
+```powershell
+$env:SOPHIA_SCALAR_MOTOR_MAP="motor_index_map.json"
+python realtime_chat_nonverbal_from_txt.py
+```
+
+## What The Scalar-Index Sender Does
+
+It sends a batch of scalar motor commands:
+
+```json
+{"unit":"rad","commands":[{"index":0,"value":-1.2217},{"index":3,"value":1.8850}]}
+```
+
+Each value comes directly from `motion_repo.py` after degrees-to-radians
+conversion and actuator-limit clamping.
 
 ## Optional Direct Actuator-Name Path
 
@@ -122,10 +151,22 @@ leftHandReachOut+rightHandReachOut 0.8
 standby 0.6
 ```
 
-For the standard-index path, this creates one merged pose and sends the needed
-standard index packets without axis-angle conversion. If two keyframes in the
-same compound action control the same actuator, the later keyframe wins and the
-sender prints a warning.
+For the scalar-index path, this creates one merged pose and sends one batch TCP
+request. The robot bridge publishes one `TargetPosture` message for all motors.
+If two keyframes in the same compound action control the same actuator, the
+later keyframe wins and the sender prints a warning.
+
+## Standard-Index Comparison
+
+`standard_index_motion_sender.py` is still included for comparison with
+`bodycontrol_tcp_standard.py`, but that path still uses the old vector-shaped
+packet:
+
+```json
+{"index":17,"value":[-1.2217,0.0,0.0]}
+```
+
+Use it only when intentionally comparing against the existing standard bridge.
 
 ## Legacy Comparison
 

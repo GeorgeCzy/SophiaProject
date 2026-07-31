@@ -49,7 +49,10 @@ APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip()
     "yes",
     "on",
 }
-MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "standard_index").strip().lower()
+MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "scalar_index").strip().lower()
+SCALAR_ROBOT_HOST = os.getenv("SOPHIA_SCALAR_ROBOT_HOST", "10.0.0.10")
+SCALAR_ROBOT_PORT = int(os.getenv("SOPHIA_SCALAR_ROBOT_PORT", "5007"))
+SCALAR_MOTOR_MAP = os.getenv("SOPHIA_SCALAR_MOTOR_MAP", "").strip()
 STANDARD_ROBOT_HOST = os.getenv("SOPHIA_STANDARD_ROBOT_HOST", "10.0.0.10")
 STANDARD_ROBOT_PORT = int(os.getenv("SOPHIA_STANDARD_ROBOT_PORT", "5005"))
 DIRECT_ROBOT_HOST = os.getenv("SOPHIA_DIRECT_ROBOT_HOST", "10.0.0.10")
@@ -238,7 +241,21 @@ def run_move_sender():
             )
             return
         time.sleep(0.1)
-    if MOTION_SENDER in {"standard", "standard_index", "index"}:
+    if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
+        sender_cmd = [
+            sys.executable,
+            "scalar_index_motion_sender.py",
+            "--input-file",
+            "actions.txt",
+            "--host",
+            SCALAR_ROBOT_HOST,
+            "--port",
+            str(SCALAR_ROBOT_PORT),
+        ]
+        if SCALAR_MOTOR_MAP:
+            sender_cmd.extend(["--motor-map", SCALAR_MOTOR_MAP])
+        sender_name = "scalar_index_motion_sender.py"
+    elif MOTION_SENDER in {"standard", "standard_index"}:
         sender_cmd = [
             sys.executable,
             "standard_index_motion_sender.py",
@@ -277,7 +294,7 @@ def run_move_sender():
     else:
         print(
             f"Unknown SOPHIA_MOTION_SENDER={MOTION_SENDER!r}; "
-            "expected standard_index, direct, or legacy.",
+            "expected scalar_index, standard_index, direct, or legacy.",
             flush=True,
         )
         return
@@ -516,7 +533,11 @@ if __name__ == "__main__":
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
-    if MOTION_SENDER in {"standard", "standard_index", "index"}:
+    if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
+        print(f"SCALAR_ROBOT = {SCALAR_ROBOT_HOST}:{SCALAR_ROBOT_PORT}")
+        if SCALAR_MOTOR_MAP:
+            print(f"SCALAR_MOTOR_MAP = {SCALAR_MOTOR_MAP}")
+    elif MOTION_SENDER in {"standard", "standard_index"}:
         print(f"STANDARD_ROBOT = {STANDARD_ROBOT_HOST}:{STANDARD_ROBOT_PORT}")
     elif MOTION_SENDER == "direct":
         print(f"DIRECT_ROBOT = {DIRECT_ROBOT_HOST}:{DIRECT_ROBOT_PORT}")
