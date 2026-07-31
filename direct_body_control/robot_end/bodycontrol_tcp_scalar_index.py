@@ -1,54 +1,144 @@
 #!/usr/bin/env python3
 """
-Scalar-index TCP JSON -> HR ROS body actuators bridge.
+Simple scalar-index TCP bridge for Sophia body control.
 
-This is the minimal index-based robot-end path:
+This is the robot-end replacement for bodycontrol_tcp_standard.py when the
+local side uses the existing Sophia_control.py client unchanged.
 
-    {"index": 0, "value": -1.22, "unit": "rad"}
-    {"commands": [{"index": 0, "value": -1.22}, {"index": 13, "value": 1.22}], "unit": "rad"}
-    {"command": "reset"}
+Sophia_control.py sends:
 
-Each index maps to exactly one actuator, and each value is one scalar target
-angle. No SMPL-X joint mapping and no axis-angle vector is used.
+    {"index": <motor_index>, "value": <target_radians>}
+
+This bridge interprets that literally:
+
+    one index -> one actuator -> one scalar radian target
+
+No SMPL-X mapping, no axis-angle vector, no [x, y, z] value.
 """
-
-from __future__ import annotations
 
 import argparse
 import json
+import math
 import socket
 import threading
+from typing import Dict, List, Tuple
 
 import rospy
 from hr_msgs.msg import TargetPosture
 from hr_msgs.srv import SetActuatorsControl, SetActuatorsControlRequest
 
-from scalar_index_protocol import (
-    load_motor_index_map,
-    request_to_scalar_commands,
-    scalar_commands_to_names_values,
-    standby_scalar_commands,
-)
+
+def deg(value):
+    return float(value) * math.pi / 180.0
+
+
+# Keep this table identical to llm_move_sender.py.
+# If the robot has official motor IDs, edit only these integer keys.
+MOTOR_INDEX_TO_ACTUATOR = {
+    0: "RightShoulderPitch",
+    1: "RightShoulderRoll",
+    2: "RightShoulderYaw",
+    3: "RightElbowPitch",
+    4: "RightElbowYaw",
+    5: "RightWristPitch",
+    6: "RightWristRoll",
+    7: "RightThumbRoll",
+    8: "RightThumbFinger",
+    9: "RightIndexFinger",
+    10: "RightMiddleFinger",
+    11: "RightRingFinger",
+    12: "RightPinkyFinger",
+    13: "LeftShoulderPitch",
+    14: "LeftShoulderRoll",
+    15: "LeftShoulderYaw",
+    16: "LeftElbowPitch",
+    17: "LeftElbowYaw",
+    18: "LeftWristPitch",
+    19: "LeftWristRoll",
+    20: "LeftThumbRoll",
+    21: "LeftThumbFinger",
+    22: "LeftIndexFinger",
+    23: "LeftMiddleFinger",
+    24: "LeftRingFinger",
+    25: "LeftPinkyFinger",
+}
+
+
+ACTUATOR_LIMITS = {
+    "RightShoulderPitch": (deg(-145), deg(35)),
+    "RightShoulderRoll": (deg(-4), deg(101)),
+    "RightShoulderYaw": (deg(-66), deg(83)),
+    "RightElbowPitch": (deg(-127), deg(119)),
+    "RightElbowYaw": (deg(-123), deg(123)),
+    "RightWristPitch": (deg(-35), deg(35)),
+    "RightWristRoll": (deg(-35), deg(35)),
+    "RightThumbRoll": (deg(-31), deg(22)),
+    "RightThumbFinger": (deg(-75), deg(44)),
+    "RightIndexFinger": (deg(-123), deg(18)),
+    "RightMiddleFinger": (deg(-18), deg(132)),
+    "RightRingFinger": (deg(-18), deg(136)),
+    "RightPinkyFinger": (deg(-75), deg(4)),
+    "LeftShoulderPitch": (deg(-35), deg(145)),
+    "LeftShoulderRoll": (deg(-101), deg(4)),
+    "LeftShoulderYaw": (deg(-83), deg(66)),
+    "LeftElbowPitch": (deg(-119), deg(127)),
+    "LeftElbowYaw": (deg(-123), deg(123)),
+    "LeftWristPitch": (deg(-35), deg(35)),
+    "LeftWristRoll": (deg(-35), deg(35)),
+    "LeftThumbRoll": (deg(-31), deg(22)),
+    "LeftThumbFinger": (deg(-44), deg(75)),
+    "LeftIndexFinger": (deg(-18), deg(123)),
+    "LeftMiddleFinger": (deg(-18), deg(132)),
+    "LeftRingFinger": (deg(-18), deg(136)),
+    "LeftPinkyFinger": (deg(-4), deg(75)),
+}
+
+
+def clamp(actuator, value):
+    lo, hi = ACTUATOR_LIMITS[actuator]
+    return max(lo, min(hi, float(value)))
+
+
+def parse_scalar_command(request):
+    if not isinstance(request, dict):
+        raise ValueError("request must be a JSON object")
+    if "index" not in request or "value" not in request:
+        raise ValueError("request must include index and value")
+
+    index = int(request["index"])
+    if index not in MOTOR_INDEX_TO_ACTUATOR:
+        raise ValueError("unknown motor index: %s" % index)
+
+    raw_value = request["value"]
+    if isinstance(raw_value, (list, tuple)):
+        raise ValueError("value must be one scalar radian number, not a vector/list")
+
+    actuator = MOTOR_INDEX_TO_ACTUATOR[index]
+    value = clamp(actuator, float(raw_value))
+    return index, actuator, value
+
+
+def reset_pose():
+    names = []
+    values = []
+    for index in sorted(MOTOR_INDEX_TO_ACTUATOR):
+        actuator = MOTOR_INDEX_TO_ACTUATOR[index]
+        names.append(actuator)
+        values.append(0.0)
+    return names, values
 
 
 class ScalarIndexBodyBridgeServer:
-    def __init__(
-        self,
-        host: str = "0.0.0.0",
-        port: int = 5007,
-        motor_map_path: str | None = None,
-    ):
-        self.motor_map = load_motor_index_map(motor_map_path)
-
+    def __init__(self, host="0.0.0.0", port=5005):
         rospy.loginfo("[ScalarIndexBodyBridge] waiting for /hr/actuators/set_control ...")
         rospy.wait_for_service("/hr/actuators/set_control")
 
         self.pose_pub = rospy.Publisher("/hr/actuators/pose", TargetPosture, queue_size=1)
         self.set_control = rospy.ServiceProxy("/hr/actuators/set_control", SetActuatorsControl)
 
-        self._set_manual_for_scalar_actuators()
-        self._publish_scalar_commands(standby_scalar_commands(self.motor_map))
-        rospy.loginfo("[ScalarIndexBodyBridge] sent startup scalar reset")
+        self._set_manual_for_actuators()
+        self._publish(*reset_pose())
+        rospy.loginfo("[ScalarIndexBodyBridge] sent startup zero pose")
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -56,17 +146,17 @@ class ScalarIndexBodyBridgeServer:
         self.sock.listen(16)
         rospy.loginfo("[ScalarIndexBodyBridge] listening on %s:%s", host, port)
 
-    def _set_manual_for_scalar_actuators(self) -> None:
+    def _set_manual_for_actuators(self):
         req = SetActuatorsControlRequest()
         req.control = SetActuatorsControlRequest.CONTROL_MANUAL
-        req.actuators = sorted(self.motor_map.values())
+        req.actuators = sorted(MOTOR_INDEX_TO_ACTUATOR.values())
         self.set_control(req)
         rospy.loginfo(
             "[ScalarIndexBodyBridge] set MANUAL control for %s actuators",
             len(req.actuators),
         )
 
-    def serve_forever(self) -> None:
+    def serve_forever(self):
         try:
             while not rospy.is_shutdown():
                 conn, addr = self.sock.accept()
@@ -79,16 +169,16 @@ class ScalarIndexBodyBridgeServer:
             except Exception:
                 pass
 
-    def _handle(self, conn: socket.socket, addr) -> None:
+    def _handle(self, conn, addr):
         try:
-            raw = conn.recv(65536)
+            raw = conn.recv(4096)
             if not raw:
                 return
 
             request = json.loads(raw.decode("utf-8"))
-            commands = request_to_scalar_commands(request, self.motor_map)
-            sent = self._publish_scalar_commands(commands)
-            self._send(conn, code=0, result={"sent": sent})
+            index, actuator, value = parse_scalar_command(request)
+            self._publish([actuator], [value])
+            self._send(conn, code=0, result={"index": index, "sent": {actuator: value}})
         except Exception as exc:
             self._send(conn, code=99, error=str(exc))
         finally:
@@ -97,22 +187,13 @@ class ScalarIndexBodyBridgeServer:
             except Exception:
                 pass
 
-    def _publish_scalar_commands(self, commands: list[tuple[int, float]]) -> dict[str, float]:
-        names, values = scalar_commands_to_names_values(commands, self.motor_map)
-        if not names:
-            raise ValueError("no mapped actuator commands to publish")
-
+    def _publish(self, names, values):
         msg = TargetPosture()
-        msg.names = names
-        msg.values = values
+        msg.names = list(names)
+        msg.values = list(values)
         self.pose_pub.publish(msg)
-        return {
-            f"{index}:{self.motor_map[index]}": value
-            for index, value in commands
-            if index in self.motor_map
-        }
 
-    def _send(self, conn: socket.socket, code: int, result=None, error: str = "") -> None:
+    def _send(self, conn, code, result=None, error=""):
         response = {"code": code}
         if code == 0:
             response["result"] = result
@@ -121,28 +202,19 @@ class ScalarIndexBodyBridgeServer:
         conn.sendall(json.dumps(response).encode("utf-8"))
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run scalar-index TCP bridge for Sophia body actuators."
+        description="Run simple scalar-index TCP bridge for Sophia body actuators."
     )
     parser.add_argument("--host", default="0.0.0.0", help="TCP bind host.")
-    parser.add_argument("--port", type=int, default=5007, help="TCP bind port.")
-    parser.add_argument(
-        "--motor-map",
-        default="",
-        help="Optional JSON motor index map shared with the local sender.",
-    )
+    parser.add_argument("--port", type=int, default=5005, help="TCP bind port.")
     return parser.parse_args()
 
 
-def main() -> int:
+def main():
     args = parse_args()
     rospy.init_node("sophia_body_bridge_scalar_index", anonymous=True)
-    server = ScalarIndexBodyBridgeServer(
-        host=args.host,
-        port=args.port,
-        motor_map_path=args.motor_map or None,
-    )
+    server = ScalarIndexBodyBridgeServer(host=args.host, port=args.port)
     server.serve_forever()
     return 0
 

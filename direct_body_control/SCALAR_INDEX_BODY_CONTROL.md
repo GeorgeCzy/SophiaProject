@@ -1,127 +1,85 @@
-# Scalar Index Body Control Path
+# Simple Scalar Index Body Control
 
-This path removes the SMPL-X vector shape completely.
+This is the simplified replacement for:
+
+```text
+bodycontrol_tcp_standard.py + realtime_chat_nonverbal_from_txt.py
+```
+
+The local TCP client stays unchanged: `Sophia_control.py`.
 
 ## Protocol
 
-Each TCP command means:
+`Sophia_control.py` already sends:
+
+```json
+{"index":0,"value":-1.2217}
+```
+
+The new robot-end bridge interprets it literally:
 
 ```text
-one motor index -> one actuator -> one scalar radian value
+one index -> one motor -> one scalar radian value
 ```
 
-Single motor:
-
-```json
-{"index":0,"value":-1.2217,"unit":"rad"}
-```
-
-Multiple motors in one command:
-
-```json
-{"commands":[{"index":0,"value":-1.2217},{"index":13,"value":1.2217}],"unit":"rad"}
-```
-
-Reset all mapped motors to zero:
-
-```json
-{"command":"reset"}
-```
-
-No request in this path uses `[x, y, z]`.
-
-## Motor Index Map
-
-The shared map is in `scalar_index_protocol.py`.
-
-By default it assigns indexes `0..N` to the actuator names already used by
-`motion_repo.py`. If the robot has an official motor-index table, create a JSON
-file and use it on both ends:
-
-```json
-{
-  "0": "RightShoulderPitch",
-  "1": "RightShoulderRoll",
-  "2": "RightShoulderYaw"
-}
-```
-
-The JSON values must be actuator names from `motion_repo.py`.
+No `[x, y, z]`, no axis-angle, no SMPL-X mapping.
 
 ## Robot End
 
-Copy these files to the same folder on the robot:
+Copy only this file to the robot:
 
 ```text
 bodycontrol_tcp_scalar_index.py
-scalar_index_protocol.py
-direct_robot_protocol.py
 ```
 
-Run:
+Run it on the same port used by `Sophia_control.py`:
 
 ```bash
-python3 bodycontrol_tcp_scalar_index.py --port 5007
+python3 bodycontrol_tcp_scalar_index.py --port 5005
 ```
 
-If using an official motor map:
-
-```bash
-python3 bodycontrol_tcp_scalar_index.py --port 5007 --motor-map motor_index_map.json
-```
+If Sophia's real motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` near
+the top of `bodycontrol_tcp_scalar_index.py`. The same table must match
+`llm_move_sender.py` on the local end.
 
 ## Local End
 
-Keep these files together locally:
+Copy or keep these files together locally, in the same folder:
 
 ```text
 realtime_chat_nonverbal_from_txt.py
 nonverbal_motion_agent.py
 system_prompt.txt
 motion_repo.py
-scalar_index_motion_sender.py
-scalar_index_protocol.py
-direct_robot_protocol.py
+llm_move_sender.py
+Sophia_control.py
 actions.txt
-Sophia_Face_HCI/main.py
 ```
 
-Dry-run an action file:
+Run:
 
-```bash
-python scalar_index_motion_sender.py --input-file actions.txt --dry-run
-```
-
-Send to robot:
-
-```bash
-python scalar_index_motion_sender.py --input-file actions.txt --host 10.0.0.10 --port 5007
-```
-
-With an official motor map:
-
-```bash
-python scalar_index_motion_sender.py --input-file actions.txt --host 10.0.0.10 --port 5007 --motor-map motor_index_map.json
-```
-
-The realtime scripts now default to this path:
-
-```bash
-export SOPHIA_MOTION_SENDER=scalar_index
-export SOPHIA_SCALAR_ROBOT_HOST=10.0.0.10
-export SOPHIA_SCALAR_ROBOT_PORT=5007
+```powershell
+$env:SOPHIA_MOTION_SENDER="scalar_index"
+$env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
+$env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
 ```
 
-## Simultaneous Movement
+Then run face/speech as before:
 
-Use `+` to merge keyframes:
-
-```text
-leftHandReachOut+rightHandReachOut 0.8
-standby 0.6
+```powershell
+cd Sophia_Face_HCI
+python main.py
 ```
 
-The local sender turns that merged keyframe into one batch TCP request, and the
-robot bridge publishes one `TargetPosture` message containing all involved
-motors.
+Dry-run without robot:
+
+```powershell
+python llm_move_sender.py --input-file actions.txt --dry-run
+```
+
+## Important Note About Simultaneous Motion
+
+Keeping `Sophia_control.py` unchanged means it sends one motor per TCP request.
+That is simpler and matches the old local interface, but true same-packet batch
+movement would require changing `Sophia_control.py`.

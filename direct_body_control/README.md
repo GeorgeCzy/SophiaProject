@@ -1,53 +1,59 @@
 # Sophia Body Control
 
-This folder contains simplified body-control options for Sophia's LLM nonverbal
-motion pipeline.
+This folder contains the simplified scalar-index body-control path for Sophia's
+LLM nonverbal motion pipeline.
 
-The old path was:
-
-```text
-LLM action -> motion_repo keyframe -> SMPL/index mapping -> axis-angle value -> robot bridge -> actuator
-```
-
-The recommended path now is:
+Old path:
 
 ```text
-LLM action -> motion_repo keyframe -> scalar motor-index packet -> bodycontrol_tcp_scalar_index.py
+motion_repo keyframe -> SMPL/index mapping -> axis-angle [x,y,z] -> bodycontrol_tcp_standard.py
 ```
 
-This uses one integer motor index and one scalar radian value per motor. It
-does not send `[x, y, z]` vectors.
+Recommended path:
 
-## Recommended Robot End
+```text
+motion_repo keyframe -> scalar motor index + radian value -> Sophia_control.py -> bodycontrol_tcp_scalar_index.py
+```
 
-Copy these files to the robot:
+The local TCP client remains `Sophia_control.py`.
+
+## Robot End
+
+Copy only this file to the robot:
 
 ```text
 robot_end/bodycontrol_tcp_scalar_index.py
-robot_end/scalar_index_protocol.py
-robot_end/direct_robot_protocol.py
 ```
 
-Run the scalar-index bridge:
+Run it on the same port that `Sophia_control.py` already uses:
 
 ```bash
-python3 bodycontrol_tcp_scalar_index.py --port 5007
+python3 bodycontrol_tcp_scalar_index.py --port 5005
 ```
 
-Default port: `5007`.
+The robot bridge accepts:
 
-## Recommended Local End
+```json
+{"index":0,"value":-1.2217}
+```
 
-Use:
+and sends that scalar radian value to one actuator.
+
+If Sophia's official motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` in
+both `robot_end/bodycontrol_tcp_scalar_index.py` and `local_end/llm_move_sender.py`.
+
+## Local End
+
+Use these files locally, in the same folder:
 
 ```text
 local_end/realtime_chat_nonverbal_from_txt.py
 local_end/nonverbal_motion_agent.py
 local_end/system_prompt.txt
 local_end/motion_repo.py
-local_end/scalar_index_motion_sender.py
-local_end/scalar_index_protocol.py
-local_end/direct_robot_protocol.py
+local_end/llm_move_sender.py
+local_end/Sophia_control.py
+local_end/actions.txt
 ```
 
 For the full speech + motion loop, place/copy the local-end files into the
@@ -56,7 +62,7 @@ same folder that contains `Sophia_Face_HCI/`, then run:
 ```powershell
 $env:SOPHIA_MOTION_SENDER="scalar_index"
 $env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
-$env:SOPHIA_SCALAR_ROBOT_PORT="5007"
+$env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
 ```
 
@@ -67,108 +73,33 @@ cd Sophia_Face_HCI
 python main.py
 ```
 
-Quick dry run:
+Dry run:
 
 ```powershell
-python scalar_index_motion_sender.py --input-file actions.example.txt --dry-run
+python llm_move_sender.py --input-file actions.example.txt --dry-run
 ```
 
 Quick robot test:
 
 ```powershell
-"rightHandRaise 0.5`nstandby 0.5" | python scalar_index_motion_sender.py --host 10.0.0.10 --port 5007
+"rightHandRaise 0.5`nstandby 0.5" | python llm_move_sender.py --host 10.0.0.10 --port 5005
 ```
 
-## Motor Index Map
+## Simultaneous Motion Note
 
-The default map is in `scalar_index_protocol.py` and assigns `0..N` to the
-actuator names used by `motion_repo.py`.
-
-If the robot has an official motor-index table, put it in a JSON file and pass
-the same file to both ends:
-
-```json
-{"0":"RightShoulderPitch","1":"RightShoulderRoll"}
-```
-
-Robot:
-
-```bash
-python3 bodycontrol_tcp_scalar_index.py --port 5007 --motor-map motor_index_map.json
-```
-
-Local:
-
-```powershell
-$env:SOPHIA_SCALAR_MOTOR_MAP="motor_index_map.json"
-python realtime_chat_nonverbal_from_txt.py
-```
-
-## What The Scalar-Index Sender Does
-
-It sends a batch of scalar motor commands:
-
-```json
-{"unit":"rad","commands":[{"index":0,"value":-1.2217},{"index":3,"value":1.8850}]}
-```
-
-Each value comes directly from `motion_repo.py` after degrees-to-radians
-conversion and actuator-limit clamping.
-
-## Optional Direct Actuator-Name Path
-
-The earlier direct actuator-name bridge is still included for comparison:
-
-Robot end:
-
-```text
-robot_end/bodycontrol_tcp_direct.py
-robot_end/direct_robot_protocol.py
-```
-
-Local end:
-
-```text
-local_end/direct_motion_sender.py
-local_end/direct_robot_protocol.py
-```
-
-Run it only if you intentionally want the actuator-name protocol:
-
-```powershell
-$env:SOPHIA_MOTION_SENDER="direct"
-$env:SOPHIA_DIRECT_ROBOT_HOST="10.0.0.10"
-$env:SOPHIA_DIRECT_ROBOT_PORT="5006"
-python realtime_chat_nonverbal_from_txt.py
-```
-
-## Simultaneous Motions
-
-Use `+` to merge keyframes into one command:
+`+` compound actions still merge keyframes locally:
 
 ```text
 leftHandReachOut+rightHandReachOut 0.8
 standby 0.6
 ```
 
-For the scalar-index path, this creates one merged pose and sends one batch TCP
-request. The robot bridge publishes one `TargetPosture` message for all motors.
-If two keyframes in the same compound action control the same actuator, the
-later keyframe wins and the sender prints a warning.
+Because `Sophia_control.py` is unchanged, `llm_move_sender.py` sends those
+motors one by one very quickly. True same-packet batch movement would require
+changing `Sophia_control.py`.
 
-## Standard-Index Comparison
+## Comparison Paths
 
-`standard_index_motion_sender.py` is still included for comparison with
-`bodycontrol_tcp_standard.py`, but that path still uses the old vector-shaped
-packet:
-
-```json
-{"index":17,"value":[-1.2217,0.0,0.0]}
-```
-
-Use it only when intentionally comparing against the existing standard bridge.
-
-## Legacy Comparison
-
-Use `SOPHIA_MOTION_SENDER=legacy` only when comparing against the old
-`bodycontrol_tcp_standard.py` + `llm_move_sender.py` SMPL/index path.
+`standard_index_motion_sender.py` and the direct actuator-name files are still
+kept only for comparison. The recommended path above avoids both SMPL-X and the
+old `[x, y, z]` vector packet.

@@ -51,8 +51,7 @@ APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip()
 }
 MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "scalar_index").strip().lower()
 SCALAR_ROBOT_HOST = os.getenv("SOPHIA_SCALAR_ROBOT_HOST", "10.0.0.10")
-SCALAR_ROBOT_PORT = int(os.getenv("SOPHIA_SCALAR_ROBOT_PORT", "5007"))
-SCALAR_MOTOR_MAP = os.getenv("SOPHIA_SCALAR_MOTOR_MAP", "").strip()
+SCALAR_ROBOT_PORT = int(os.getenv("SOPHIA_SCALAR_ROBOT_PORT", "5005"))
 STANDARD_ROBOT_HOST = os.getenv("SOPHIA_STANDARD_ROBOT_HOST", "10.0.0.10")
 STANDARD_ROBOT_PORT = int(os.getenv("SOPHIA_STANDARD_ROBOT_PORT", "5005"))
 DIRECT_ROBOT_HOST = os.getenv("SOPHIA_DIRECT_ROBOT_HOST", "10.0.0.10")
@@ -244,7 +243,7 @@ def run_move_sender():
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
         sender_cmd = [
             sys.executable,
-            "scalar_index_motion_sender.py",
+            "llm_move_sender.py",
             "--input-file",
             "actions.txt",
             "--host",
@@ -252,9 +251,7 @@ def run_move_sender():
             "--port",
             str(SCALAR_ROBOT_PORT),
         ]
-        if SCALAR_MOTOR_MAP:
-            sender_cmd.extend(["--motor-map", SCALAR_MOTOR_MAP])
-        sender_name = "scalar_index_motion_sender.py"
+        sender_name = "llm_move_sender.py"
     elif MOTION_SENDER in {"standard", "standard_index"}:
         sender_cmd = [
             sys.executable,
@@ -535,8 +532,6 @@ if __name__ == "__main__":
     print(f"MOTION_SENDER = {MOTION_SENDER}")
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
         print(f"SCALAR_ROBOT = {SCALAR_ROBOT_HOST}:{SCALAR_ROBOT_PORT}")
-        if SCALAR_MOTOR_MAP:
-            print(f"SCALAR_MOTOR_MAP = {SCALAR_MOTOR_MAP}")
     elif MOTION_SENDER in {"standard", "standard_index"}:
         print(f"STANDARD_ROBOT = {STANDARD_ROBOT_HOST}:{STANDARD_ROBOT_PORT}")
     elif MOTION_SENDER == "direct":
