@@ -43,6 +43,12 @@ INPUT_PATH = Path(
         str(Path(BASE_DIR) / "input.txt"),
     )
 )
+CHAT_HISTORY_PATH = Path(
+    os.getenv(
+        "SOPHIA_CHAT_HISTORY_FILE",
+        str(Path(BASE_DIR) / "chat_history.jsonl"),
+    )
+)
 APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip().lower() in {
     "1",
     "true",
@@ -324,32 +330,95 @@ def handle_output(output_text: str, speech_duration_sec: float | None):
     write_actions_file(normalized)
     run_move_sender()
 
+
+def extract_latest_ai_text_from_history(path: Path) -> tuple[str, tuple]:
+    """Return the newest AI/robot utterance from a JSONL chat history."""
+    latest_item: dict | None = None
+    latest_line_no = 0
+
+    with path.open("r", encoding="utf-8") as file:
+        for line_no, raw_line in enumerate(file, start=1):
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            role = str(item.get("role", "")).strip().lower()
+            text = str(item.get("text", "")).strip()
+            if role in {"ai", "assistant", "robot"} and text:
+                latest_item = item
+                latest_line_no = line_no
+
+    if not latest_item:
+        return "", ("chat_history", 0)
+
+    text = str(latest_item.get("text", "")).strip()
+    signature = (
+        "chat_history",
+        latest_item.get("time", ""),
+        latest_item.get("sequence", ""),
+        latest_line_no,
+        text,
+    )
+    return text, signature
+
+
+def write_extracted_input_text(text: str) -> None:
+    """Mirror extracted robot speech to input.txt for visibility and debugging."""
+    try:
+        old_text = INPUT_PATH.read_text(encoding="utf-8").strip()
+    except Exception:
+        old_text = ""
+
+    if old_text == text.strip():
+        return
+    INPUT_PATH.write_text(text.strip() + "\n", encoding="utf-8")
+    print(f"Extracted latest AI text to {INPUT_PATH}", flush=True)
+
+
+def read_motion_source() -> tuple[str, tuple]:
+    """Read either chat_history.jsonl or plain input.txt."""
+    if CHAT_HISTORY_PATH.exists():
+        content, signature = extract_latest_ai_text_from_history(CHAT_HISTORY_PATH)
+        if content:
+            write_extracted_input_text(content)
+        return content, signature
+
+    if not INPUT_PATH.exists():
+        raise FileNotFoundError(f"Input file does not exist yet: {INPUT_PATH}")
+
+    stat = INPUT_PATH.stat()
+    with INPUT_PATH.open("r", encoding="utf-8") as file:
+        content = file.read().strip()
+    return content, ("input", stat.st_mtime_ns, stat.st_size)
+
+
 def file_input_loop(ws):
     """Poll Sophia's latest spoken answer and plan motion when it updates."""
-    print(f"Watching spoken-answer file: {INPUT_PATH}")
+    print(f"Watching chat-history file when present: {CHAT_HISTORY_PATH}")
+    print(f"Watching/extracting spoken-answer file: {INPUT_PATH}")
     print(f"Watching duration hint: {DURATION_PATH}")
 
-    last_sent_signature: tuple[int, int] | None = None
+    last_sent_signature: tuple | None = None
     missing_reported = False
 
     while not stop_event.is_set():
         response_done.wait()
 
         try:
-            if not INPUT_PATH.exists():
-                if not missing_reported:
-                    print(f"Input file does not exist yet: {INPUT_PATH}", flush=True)
-                    missing_reported = True
-                stop_event.wait(0.5)
-                continue
+            content, signature = read_motion_source()
             missing_reported = False
-            stat = INPUT_PATH.stat()
-            signature = (stat.st_mtime_ns, stat.st_size)
-
-            with INPUT_PATH.open("r", encoding="utf-8") as f:
-                content = f.read().strip()
+        except FileNotFoundError as e:
+            if not missing_reported:
+                print(str(e), flush=True)
+                missing_reported = True
+            stop_event.wait(0.5)
+            continue
         except Exception as e:
-            print(f"Failed to read input file: {e}", flush=True)
+            print(f"Failed to read motion input source: {e}", flush=True)
             stop_event.wait(0.5)
             continue
 
@@ -358,7 +427,6 @@ def file_input_loop(ws):
             stop_event.wait(0.5)
             continue
 
-        # Same file version -> do not send. A rewritten file triggers even if text is identical.
         if signature == last_sent_signature:
             stop_event.wait(0.5)
             continue
@@ -527,6 +595,7 @@ if __name__ == "__main__":
     print(f"PROMPT = {PROMPT_PATH}")
     print(f"ACTIONS = {ACTIONS_PATH}")
     print(f"INPUT  = {INPUT_PATH}")
+    print(f"CHAT_HISTORY = {CHAT_HISTORY_PATH}")
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")

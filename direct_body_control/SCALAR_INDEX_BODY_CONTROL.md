@@ -53,6 +53,7 @@ system_prompt.txt
 motion_repo.py
 llm_move_sender.py
 Sophia_control.py
+extract_input_from_chat_history.py
 input.txt
 actions.txt
 ```
@@ -72,6 +73,22 @@ agents:
 
 ```bash
 echo "Hello, nice to meet you. Let me explain how this works." > input.txt
+```
+
+If `chat_history.jsonl` exists in the same folder, the realtime script watches
+that file instead, extracts the newest `role:"ai"` message into `input.txt`,
+and sends only that latest robot utterance to the motion agents.
+
+Manual extraction:
+
+```bash
+python extract_input_from_chat_history.py --history chat_history.jsonl --output input.txt
+```
+
+Continuous extraction:
+
+```bash
+python extract_input_from_chat_history.py --history chat_history.jsonl --output input.txt --watch
 ```
 
 Then run face/speech as before:

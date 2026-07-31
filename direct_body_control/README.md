@@ -53,6 +53,7 @@ local_end/system_prompt.txt
 local_end/motion_repo.py
 local_end/llm_move_sender.py
 local_end/Sophia_control.py
+local_end/extract_input_from_chat_history.py
 local_end/input.txt
 local_end/actions.txt
 ```
@@ -73,6 +74,22 @@ agents:
 
 ```powershell
 "Hello, nice to meet you. Let me explain how this works." | Set-Content input.txt
+```
+
+If `chat_history.jsonl` exists in the same folder, the realtime script watches
+that file instead, extracts the newest `role:"ai"` message into `input.txt`,
+and sends only that latest robot utterance to the motion agents.
+
+Manual extraction:
+
+```powershell
+python extract_input_from_chat_history.py --history chat_history.jsonl --output input.txt
+```
+
+Continuous extraction if another program is writing the JSONL file:
+
+```powershell
+python extract_input_from_chat_history.py --history chat_history.jsonl --output input.txt --watch
 ```
 
 In another terminal, run the Sophia Face HCI realtime speech program:
