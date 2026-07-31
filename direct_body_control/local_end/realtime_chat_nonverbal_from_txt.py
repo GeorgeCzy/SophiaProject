@@ -40,7 +40,7 @@ LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"
 INPUT_PATH = Path(
     os.getenv(
         "SOPHIA_NONVERBAL_INPUT_FILE",
-        str(Path(BASE_DIR) / "Sophia_Face_HCI" / "answers.txt"),
+        str(Path(BASE_DIR) / "input.txt"),
     )
 )
 APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip().lower() in {

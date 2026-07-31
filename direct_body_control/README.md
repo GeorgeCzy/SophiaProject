@@ -53,6 +53,7 @@ local_end/system_prompt.txt
 local_end/motion_repo.py
 local_end/llm_move_sender.py
 local_end/Sophia_control.py
+local_end/input.txt
 local_end/actions.txt
 ```
 
@@ -64,6 +65,14 @@ $env:SOPHIA_MOTION_SENDER="scalar_index"
 $env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
 $env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
+```
+
+By default, `realtime_chat_nonverbal_from_txt.py` watches `input.txt` in the
+same folder. Edit or overwrite that file to trigger the planner and judge
+agents:
+
+```powershell
+"Hello, nice to meet you. Let me explain how this works." | Set-Content input.txt
 ```
 
 In another terminal, run the Sophia Face HCI realtime speech program:
