@@ -121,6 +121,11 @@ Generate {candidate_count} distinct candidate sequences. Each candidate should b
 
 Planning rules:
 - Use only keyframes from the allowed catalog.
+- Prefer named two-hand keyframes such as bothHandsReachOut, bothHandsRaise,
+  bothForearmsLiftSmall, and spreadHands when they fit the speech.
+- You may combine two compatible listed keyframes with +, for example
+  leftHandReachOut+rightHandReachOut, but prefer a named combined keyframe when
+  one exists.
 - Prefer one clear communicative idea per sequence: greeting, positive feedback, thinking, presenting, or subtle speaking beats.
 - For short speech, use 2-4 action lines. For longer explanations, use 4-7 action lines.
 - Do not make the robot move constantly for a long answer. It is okay for motion to cover only the most meaningful part.
@@ -137,7 +142,7 @@ Output JSON only in this exact shape:
       "id": "A",
       "intent": "short reason for the gesture concept",
       "sequence": [
-        {{"action": "rightHandReachOut", "duration": 0.8}},
+        {{"action": "bothHandsReachOut", "duration": 0.8}},
         {{"action": "standby", "duration": 0.6}}
       ]
     }}
@@ -173,6 +178,7 @@ Selection criteria, in priority order:
 3. Valid keyframe names only.
 4. Appropriate duration relative to the speech duration.
 5. Clean ending: usually standby.
+6. Prefer named combined/two-hand keyframes when they fit better than separate one-sided keyframes.
 
 If the best candidate has small errors, repair it. If all candidates are poor, create a better valid sequence.
 
@@ -190,7 +196,7 @@ def normalize_action_output(output_text: str, speech_duration_sec: float | None 
 
     cleaned: list[tuple[str, float]] = []
     for name, duration in pairs:
-        if name not in MOTIONS:
+        if not _is_valid_action_name(name):
             continue
         duration = max(MIN_ACTION_DURATION_SEC, min(float(duration), MAX_ACTION_DURATION_SEC))
         cleaned.append((name, duration))
@@ -224,7 +230,7 @@ def parse_action_pairs(output_text: str) -> list[tuple[str, float]]:
 
     line_pairs: list[tuple[str, float]] = []
     line_pattern = re.compile(
-        r'^(?:[-*]|\d+[.)])?\s*"?([A-Za-z][A-Za-z0-9_]*)"?\s*[:,]?\s*"?([0-9]+(?:\.[0-9]+)?)"?\s*(?:s|sec|seconds)?$'
+        r'^(?:[-*]|\d+[.)])?\s*"?([A-Za-z][A-Za-z0-9_]*(?:\+[A-Za-z][A-Za-z0-9_]*)*)"?\s*[:,]?\s*"?([0-9]+(?:\.[0-9]+)?)"?\s*(?:s|sec|seconds)?$'
     )
     for raw in stripped.splitlines():
         line = raw.strip()
@@ -305,7 +311,14 @@ def _default_action_combo(context: str) -> list[tuple[str, float]]:
         return [("rightThumbUp", 0.80), ("standby", DEFAULT_STANDBY_SEC)]
     if any(word in lowered for word in ("think", "idea", "maybe", "check", "想", "思考", "让我看看")):
         return [("idea", 0.80), ("standby", DEFAULT_STANDBY_SEC)]
-    return [("rightHandReachOut", 0.75), ("standby", DEFAULT_STANDBY_SEC)]
+    return [("bothHandsReachOut", 0.75), ("standby", DEFAULT_STANDBY_SEC)]
+
+
+def _is_valid_action_name(name: str) -> bool:
+    if name in MOTIONS:
+        return True
+    parts = [part.strip() for part in name.split("+") if part.strip()]
+    return bool(parts) and all(part in MOTIONS for part in parts)
 
 
 def _scale_to_target_duration(

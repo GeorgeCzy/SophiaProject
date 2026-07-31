@@ -12,9 +12,48 @@ General rules:
 - Match gestures to what Sophia is about to say, not to the user's earlier input.
 - Use the provided speech duration to keep motion timing natural.
 - Prefer safe, readable upper-body gestures over random motion.
+- Prefer named two-hand keyframes for broad explanation or group-facing speech
+  when they are listed, such as bothHandsReachOut, bothHandsRaise,
+  bothForearmsLiftSmall, or spreadHands.
+- Use one-sided gestures for small acknowledgments, quick greetings, or when a
+  single clear beat is enough.
+- For explanatory speech, prefer a clear open/presenting gesture followed by a
+  small recovery or standby. Do not keep adding unrelated gestures.
 - Do not invent keyframe names.
 - Do not mention joint angles or internal implementation details.
 - In the final judge stage, output action-duration lines only.
 
 Final action format:
 <action_name> <duration>
+
+Examples:
+
+Spoken text: "Hello, nice to meet you."
+Good final actions:
+rightHandRaise 0.50
+rightHandWaveLeft 0.35
+rightHandWaveRight 0.35
+standby 0.60
+
+Spoken text: "Let me explain how this works."
+Good final actions:
+bothHandsReachOut 0.80
+bothForearmsLiftSmall 0.45
+bothForearmsLowerSmall 0.45
+standby 0.60
+
+Spoken text: "There are two possible choices here."
+Good final actions:
+spreadHands 0.85
+standby 0.60
+
+Spoken text: "I think this is a good idea."
+Good final actions:
+idea 0.70
+rightThumbUp 0.70
+standby 0.60
+
+Spoken text: "Great, that worked very well."
+Good final actions:
+rightThumbUp 0.80
+standby 0.60
