@@ -46,7 +46,7 @@ INPUT_PATH = Path(
 CHAT_HISTORY_PATH = Path(
     os.getenv(
         "SOPHIA_CHAT_HISTORY_FILE",
-        str(Path(BASE_DIR) / "chat_history.jsonl"),
+        str(Path(BASE_DIR).parent / "chat_history.jsonl"),
     )
 )
 APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip().lower() in {

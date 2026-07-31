@@ -75,8 +75,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Extract latest AI/robot utterance from chat_history.jsonl to input.txt."
     )
-    parser.add_argument("--history", default="chat_history.jsonl", help="Path to chat_history.jsonl.")
-    parser.add_argument("--output", default="input.txt", help="Path to write extracted text.")
+    parser.add_argument(
+        "--history",
+        default="",
+        help="Path to chat_history.jsonl. Default: ../chat_history.jsonl relative to this script.",
+    )
+    parser.add_argument(
+        "--output",
+        default="",
+        help="Path to write extracted text. Default: ./input.txt beside this script.",
+    )
     parser.add_argument(
         "--roles",
         default="ai,assistant,robot",
@@ -89,8 +97,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    history_path = Path(args.history)
-    output_path = Path(args.output)
+    script_dir = Path(__file__).resolve().parent
+    history_path = Path(args.history) if args.history else script_dir.parent / "chat_history.jsonl"
+    output_path = Path(args.output) if args.output else script_dir / "input.txt"
     roles = {role.strip().lower() for role in args.roles.split(",") if role.strip()}
 
     if not args.watch:
