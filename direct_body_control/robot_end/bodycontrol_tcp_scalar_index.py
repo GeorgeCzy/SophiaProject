@@ -144,6 +144,7 @@ class ScalarIndexBodyBridgeServer:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((host, port))
         self.sock.listen(16)
+        self.sock.settimeout(0.5)
         rospy.loginfo("[ScalarIndexBodyBridge] listening on %s:%s", host, port)
 
     def _set_manual_for_actuators(self):
@@ -159,15 +160,26 @@ class ScalarIndexBodyBridgeServer:
     def serve_forever(self):
         try:
             while not rospy.is_shutdown():
-                conn, addr = self.sock.accept()
+                try:
+                    conn, addr = self.sock.accept()
+                except socket.timeout:
+                    continue
+                except OSError:
+                    if rospy.is_shutdown():
+                        break
+                    raise
                 threading.Thread(target=self._handle, args=(conn, addr), daemon=True).start()
         except KeyboardInterrupt:
             rospy.loginfo("[ScalarIndexBodyBridge] Ctrl+C received, shutting down")
+            rospy.signal_shutdown("Ctrl+C")
         finally:
-            try:
-                self.sock.close()
-            except Exception:
-                pass
+            self.shutdown()
+
+    def shutdown(self):
+        try:
+            self.sock.close()
+        except Exception:
+            pass
 
     def _handle(self, conn, addr):
         try:
@@ -215,6 +227,7 @@ def main():
     args = parse_args()
     rospy.init_node("sophia_body_bridge_scalar_index", anonymous=True)
     server = ScalarIndexBodyBridgeServer(host=args.host, port=args.port)
+    rospy.on_shutdown(server.shutdown)
     server.serve_forever()
     return 0
 
