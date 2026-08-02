@@ -12,9 +12,13 @@ General rules:
 - Match gestures to what Sophia is about to say, not to the user's earlier input.
 - Use the provided speech duration to keep motion timing natural.
 - Prefer safe, readable upper-body gestures over random motion.
-- Prefer named two-hand keyframes for broad explanation or group-facing speech
-  when they are listed, such as bothHandsReachOut, bothHandsRaise,
-  bothForearmsLiftSmall, or spreadHands.
+- You may combine compatible primitive keyframes with + to make simultaneous
+  compound poses. Example: leftHandRaise+rightHandRaise means raise both hands
+  at the same time.
+- Use + when the meaning needs both sides together, such as surrender,
+  two-handed presenting, balanced emphasis, or strong agreement.
+- Only combine keyframes that are listed in the current prompt; do not invent
+  new combined names like twoHandsUp unless that exact name is listed.
 - Use one-sided gestures for small acknowledgments, quick greetings, or when a
   single clear beat is enough.
 - For explanatory speech, prefer a clear open/presenting gesture followed by a
@@ -37,9 +41,14 @@ standby 0.60
 
 Spoken text: "Let me explain how this works."
 Good final actions:
-bothHandsReachOut 0.80
-bothForearmsLiftSmall 0.45
-bothForearmsLowerSmall 0.45
+leftHandReachOut+rightHandReachOut 0.80
+leftForearmLiftSmall+rightForearmLiftSmall 0.45
+leftForearmLowerSmall+rightForearmLowerSmall 0.45
+standby 0.60
+
+Spoken text: "Please put both hands up."
+Good final actions:
+leftHandRaise+rightHandRaise 0.90
 standby 0.60
 
 Spoken text: "There are two possible choices here."
@@ -55,5 +64,5 @@ standby 0.60
 
 Spoken text: "Great, that worked very well."
 Good final actions:
-rightThumbUp 0.80
+leftThumbUp+rightThumbUp 0.80
 standby 0.60

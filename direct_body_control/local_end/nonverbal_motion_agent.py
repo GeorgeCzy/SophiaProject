@@ -121,11 +121,11 @@ Generate {candidate_count} distinct candidate sequences. Each candidate should b
 
 Planning rules:
 - Use only keyframes from the allowed catalog.
-- Prefer named two-hand keyframes such as bothHandsReachOut, bothHandsRaise,
-  bothForearmsLiftSmall, and spreadHands when they fit the speech.
-- You may combine two compatible listed keyframes with +, for example
-  leftHandReachOut+rightHandReachOut, but prefer a named combined keyframe when
-  one exists.
+- You may combine compatible listed keyframes with + to make simultaneous compound poses.
+  Example: leftHandRaise+rightHandRaise means raise both hands at the same time.
+- Use + when the meaning needs both sides together, such as surrender, two-handed
+  presenting, balanced emphasis, or strong agreement.
+- Do not invent new combined names. Compose from listed primitive keyframes instead.
 - Prefer one clear communicative idea per sequence: greeting, positive feedback, thinking, presenting, or subtle speaking beats.
 - For short speech, use 2-4 action lines. For longer explanations, use 4-7 action lines.
 - Do not make the robot move constantly for a long answer. It is okay for motion to cover only the most meaningful part.
@@ -142,7 +142,7 @@ Output JSON only in this exact shape:
       "id": "A",
       "intent": "short reason for the gesture concept",
       "sequence": [
-        {{"action": "bothHandsReachOut", "duration": 0.8}},
+        {{"action": "leftHandReachOut+rightHandReachOut", "duration": 0.8}},
         {{"action": "standby", "duration": 0.6}}
       ]
     }}
@@ -178,7 +178,7 @@ Selection criteria, in priority order:
 3. Valid keyframe names only.
 4. Appropriate duration relative to the speech duration.
 5. Clean ending: usually standby.
-6. Prefer named combined/two-hand keyframes when they fit better than separate one-sided keyframes.
+6. Use A+B composition when the speech implies simultaneous two-sided motion.
 
 If the best candidate has small errors, repair it. If all candidates are poor, create a better valid sequence.
 
@@ -311,7 +311,7 @@ def _default_action_combo(context: str) -> list[tuple[str, float]]:
         return [("rightThumbUp", 0.80), ("standby", DEFAULT_STANDBY_SEC)]
     if any(word in lowered for word in ("think", "idea", "maybe", "check", "想", "思考", "让我看看")):
         return [("idea", 0.80), ("standby", DEFAULT_STANDBY_SEC)]
-    return [("bothHandsReachOut", 0.75), ("standby", DEFAULT_STANDBY_SEC)]
+    return [("leftHandReachOut+rightHandReachOut", 0.75), ("standby", DEFAULT_STANDBY_SEC)]
 
 
 def _is_valid_action_name(name: str) -> bool:

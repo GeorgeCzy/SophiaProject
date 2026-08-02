@@ -86,12 +86,6 @@ MOTION_DESCRIPTIONS = {
         "best_for": "Agreement, encouragement, success, praise, or confidence.",
         "caution": "Avoid for sad, serious, or factual neutral speech.",
     },
-    "bothThumbUp": {
-        "category": "positive",
-        "description": "Both hands make a clear thumbs-up approval gesture.",
-        "best_for": "Strong agreement, celebration, encouragement, or confident success.",
-        "caution": "Very expressive; avoid for neutral, sad, or serious speech.",
-    },
     "peaceSign": {
         "category": "positive",
         "description": "Right hand makes a playful peace/victory sign near the body.",
@@ -134,12 +128,6 @@ MOTION_DESCRIPTIONS = {
         "best_for": "One beat in a left-hand wave sequence.",
         "caution": "Use after leftHandRaise or between wave beats.",
     },
-    "bothHandsRaise": {
-        "category": "greeting",
-        "description": "Both hands raise together into an open greeting or attention pose.",
-        "best_for": "Warm welcome, greeting a group, cheerful hello, or inviting attention.",
-        "caution": "Large two-arm gesture; use briefly and usually return to standby.",
-    },
     "idea": {
         "category": "thinking",
         "description": "Right arm bends into a compact thinking or insight pose.",
@@ -157,12 +145,6 @@ MOTION_DESCRIPTIONS = {
         "description": "Left hand reaches forward as if offering or presenting information.",
         "best_for": "Explaining, introducing a topic, inviting attention, or offering help.",
         "caution": "Keep duration moderate so it does not look frozen.",
-    },
-    "bothHandsReachOut": {
-        "category": "presenting",
-        "description": "Both hands reach forward together as if offering or presenting information.",
-        "best_for": "Warm explanations, invitations, presenting an idea, or engaging the listener.",
-        "caution": "Use briefly; it is more expressive than a single-hand reach.",
     },
     "spreadHands": {
         "category": "presenting",
@@ -248,30 +230,6 @@ MOTION_DESCRIPTIONS = {
         "best_for": "Recovering from a stronger left forearm lift.",
         "caution": "Usually follows leftForearmLiftLarge.",
     },
-    "bothForearmsLiftSmall": {
-        "category": "micro_presenting",
-        "description": "Both forearms lift slightly together as a balanced conversational beat.",
-        "best_for": "Light emphasis during explanations, acknowledgments, or short supportive phrases.",
-        "caution": "Pair with bothForearmsLowerSmall or standby so the pose resolves.",
-    },
-    "bothForearmsLiftLarge": {
-        "category": "micro_presenting",
-        "description": "Both forearms lift more strongly together for a larger emphasis beat.",
-        "best_for": "Important points, energetic explanation, or stronger encouragement.",
-        "caution": "Avoid for calm or sensitive content.",
-    },
-    "bothForearmsLowerSmall": {
-        "category": "micro_presenting",
-        "description": "Both forearms lower slightly together, resolving a small lift.",
-        "best_for": "Recovering after bothForearmsLiftSmall.",
-        "caution": "Usually follows a forearm lift.",
-    },
-    "bothForearmsLowerLarge": {
-        "category": "micro_presenting",
-        "description": "Both forearms lower more strongly together, resolving a large lift.",
-        "best_for": "Recovering after bothForearmsLiftLarge.",
-        "caution": "Usually follows a stronger forearm lift.",
-    },
     "eyesClose": {
         "category": "attention",
         "description": "Brief eye-close or blink-like pause, if supported by the robot mapping.",
@@ -284,14 +242,15 @@ MOTION_DESCRIPTIONS = {
 SEQUENCE_PATTERNS = {
     "right_hand_wave": ["rightHandRaise", "rightHandWaveLeft", "rightHandWaveRight", "standby"],
     "left_hand_wave": ["leftHandRaise", "leftHandWaveRight", "leftHandWaveLeft", "standby"],
-    "two_hand_greeting": ["bothHandsRaise", "standby"],
+    "two_hand_greeting": ["leftHandRaise+rightHandRaise", "standby"],
+    "surrender_or_hands_up": ["leftHandRaise+rightHandRaise", "standby"],
     "positive": ["rightThumbUp", "standby"],
-    "strong_positive": ["bothThumbUp", "standby"],
+    "strong_positive": ["leftThumbUp+rightThumbUp", "standby"],
     "thinking": ["idea", "standby"],
-    "short_explanation": ["bothHandsReachOut", "standby"],
-    "broad_explanation": ["bothHandsReachOut", "spreadHands", "standby"],
+    "short_explanation": ["leftHandReachOut+rightHandReachOut", "standby"],
+    "broad_explanation": ["leftHandReachOut+rightHandReachOut", "spreadHands", "standby"],
     "subtle_speaking_beats": ["rightForearmLiftSmall", "rightForearmLowerSmall", "standby"],
-    "balanced_speaking_beats": ["bothForearmsLiftSmall", "bothForearmsLowerSmall", "standby"],
+    "balanced_speaking_beats": ["leftForearmLiftSmall+rightForearmLiftSmall", "leftForearmLowerSmall+rightForearmLowerSmall", "standby"],
 }
 
 
@@ -370,23 +329,6 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "RightPinkyFinger": 75.0, # wrong parameter on the webend
         "RightThumbRoll": 22,
     },
-    "bothThumbUp": {
-        "RightShoulderPitch": -71.0,
-        "RightThumbFinger": 44.0,
-        "RightIndexFinger": 123.0,
-        "RightMiddleFinger": -132.0,
-        "RightRingFinger": -136.0,
-        "RightPinkyFinger": 75.0,
-        "RightThumbRoll": 22,
-        "LeftShoulderPitch": 71.0,
-        "LeftThumbFinger": -44.0,
-        "LeftIndexFinger": 123.0,
-        "LeftMiddleFinger": 132.0,
-        "LeftRingFinger": 136.0,
-        "LeftPinkyFinger": 75.0,
-        "LeftShoulderRoll": -7.0,
-        "LeftThumbRoll": 22,
-    },
     "rightHandRaise":{
         "RightShoulderPitch": -70.0,
         "RightShoulderYaw": -13,
@@ -423,16 +365,6 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "LeftElbowPitch": -108,
         "LeftElbowYaw": 123,
     },
-    "bothHandsRaise":{
-        "RightShoulderPitch": -70.0,
-        "RightShoulderYaw": -13,
-        "RightElbowPitch": 108,
-        "RightElbowYaw": -123,
-        "LeftShoulderPitch": 70.0,
-        "LeftShoulderYaw": 13,
-        "LeftElbowPitch": -108,
-        "LeftElbowYaw": 123,
-    },
     "idea":{
         "RightShoulderPitch": -26,
         "RightElbowPitch": 117,
@@ -445,12 +377,6 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "RightElbowPitch": -127,
     },
     "leftHandReachOut":{
-        "LeftShoulderPitch": 111,
-        "LeftElbowPitch": 127,
-    },
-    "bothHandsReachOut":{
-        "RightShoulderPitch": -111,
-        "RightElbowPitch": -127,
         "LeftShoulderPitch": 111,
         "LeftElbowPitch": 127,
     },
@@ -521,22 +447,6 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "LeftElbowPitch": 40,
     },
     "leftForearmLowerLarge":{
-        "LeftElbowPitch": 90,
-    },
-    "bothForearmsLiftSmall":{
-        "RightElbowPitch": 40,
-        "LeftElbowPitch": -40,
-    },
-    "bothForearmsLiftLarge":{
-        "RightElbowPitch": 90,
-        "LeftElbowPitch": -90,
-    },
-    "bothForearmsLowerSmall":{
-        "RightElbowPitch": -40,
-        "LeftElbowPitch": 40,
-    },
-    "bothForearmsLowerLarge":{
-        "RightElbowPitch": -90,
         "LeftElbowPitch": 90,
     },
     "eyesClose":{
