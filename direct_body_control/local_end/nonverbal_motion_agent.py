@@ -114,13 +114,16 @@ Spoken text Sophia is about to say:
 Estimated or measured speech duration: {speech_duration_sec:.2f} seconds
 Target total motion duration: about {motion_target:.2f} seconds
 
-Allowed keyframes with semantic descriptions:
+Allowed atomic keyframes with physical pose descriptions and usage hints:
 {motion_catalog_text()}
 
 Generate {candidate_count} distinct candidate sequences. Each candidate should be safe, natural, and semantically matched to the spoken text.
 
 Planning rules:
 - Use only keyframes from the allowed catalog.
+- Read each catalog description as a physical robot pose. Infer higher-level
+  meaning by composing these atomic poses, especially with A+B for simultaneous
+  left/right body parts.
 - You may combine compatible listed keyframes with + to make simultaneous compound poses.
   Example: leftHandRaise+rightHandRaise means raise both hands at the same time.
 - Use + when the meaning needs both sides together, such as surrender, two-handed
@@ -166,7 +169,7 @@ Spoken text Sophia is about to say:
 Estimated or measured speech duration: {speech_duration_sec:.2f} seconds
 Target total motion duration: about {motion_target:.2f} seconds
 
-Allowed keyframes:
+Allowed atomic keyframes with physical pose descriptions and usage hints:
 {motion_catalog_text()}
 
 Planner candidates:

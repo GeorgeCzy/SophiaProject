@@ -2,9 +2,11 @@
 Motion repository: preset joint configurations for the robot.
 All angles in degrees. Unspecified joints remain where they are.
 
-MOTION_DESCRIPTIONS is intentionally written for LLM motion planning. Keep it
-short, physical, and semantic: the planner should understand what a keyframe
-looks like and when it is appropriate, without reading joint angles.
+MOTION_DESCRIPTIONS is intentionally written for LLM motion planning. Keep each
+description physical: it should describe what the robot's body looks like in
+that atomic keyframe. Semantic use is kept separately as a usage hint, so the
+planner can compose primitives with A+B when a higher-level gesture needs more
+than one body part.
 """
 
 import math
@@ -64,175 +66,175 @@ def get_motion_rad(name: str) -> dict[str, float]:
 MOTION_DESCRIPTIONS = {
     "standby": {
         "category": "neutral",
-        "description": "Return both arms and hands to the default neutral pose.",
-        "best_for": "Ending almost every gesture sequence cleanly.",
+        "description": "Both shoulders, elbows, wrists, fingers, and gimbal joints are at the zero neutral pose.",
+        "best_for": "Ending almost every gesture sequence cleanly or resetting after a compound pose.",
         "caution": "Use as the final keyframe, not as the main expressive gesture.",
     },
     "stay": {
         "category": "neutral",
-        "description": "Hold the current pose without moving.",
+        "description": "No actuator target changes; the robot keeps the pose it already has.",
         "best_for": "Brief pauses or intentionally holding a pose.",
         "caution": "Do not use as the final keyframe unless holding is explicitly desired.",
     },
     "leftThumbUp": {
         "category": "positive",
-        "description": "Left-hand thumbs-up approval gesture.",
-        "best_for": "Agreement, encouragement, success, praise, or confidence.",
+        "description": "Left upper arm lifts forward, the left elbow is slightly bent, the left thumb stays extended, and the other left fingers curl inward.",
+        "best_for": "Agreement, encouragement, success, praise, or confidence. Can combine with rightThumbUp for stronger two-handed approval.",
         "caution": "Avoid for sad, serious, or factual neutral speech.",
     },
     "rightThumbUp": {
         "category": "positive",
-        "description": "Right-hand thumbs-up approval gesture.",
-        "best_for": "Agreement, encouragement, success, praise, or confidence.",
+        "description": "Right upper arm lifts forward, the right elbow is slightly bent, the right thumb stays extended, and the other right fingers curl inward.",
+        "best_for": "Agreement, encouragement, success, praise, or confidence. Can combine with leftThumbUp for stronger two-handed approval.",
         "caution": "Avoid for sad, serious, or factual neutral speech.",
     },
     "peaceSign": {
         "category": "positive",
-        "description": "Right hand makes a playful peace/victory sign near the body.",
+        "description": "Right arm stays near the body while the right index and middle fingers extend and the thumb, ring, and pinky fingers curl inward.",
         "best_for": "Lighthearted positivity, celebration, friendly photos, or upbeat endings.",
         "caution": "Too playful for solemn content.",
     },
     "rightHandRaise": {
         "category": "greeting",
-        "description": "Raise the right hand into a wave-ready pose.",
-        "best_for": "Starting a right-hand hello, goodbye, or welcome wave.",
+        "description": "Right shoulder lifts the upper arm, right elbow bends, and the right forearm rises upright with the hand near or above shoulder height.",
+        "best_for": "A visible raised-right-hand atom. Can start a wave or combine with leftHandRaise for both-hands-up gestures.",
         "caution": "Usually follow with rightHandWaveLeft/rightHandWaveRight or standby.",
     },
     "rightHandWaveRight": {
         "category": "greeting",
-        "description": "Right raised hand swings to the robot's right side.",
+        "description": "Right arm remains raised while the upper arm and forearm shift the raised right hand toward the robot's right side.",
         "best_for": "One beat in a right-hand wave sequence.",
         "caution": "Use after rightHandRaise or between wave beats.",
     },
     "rightHandWaveLeft": {
         "category": "greeting",
-        "description": "Right raised hand swings to the robot's left side.",
+        "description": "Right arm remains raised while the upper arm and forearm shift the raised right hand across toward the robot's left side.",
         "best_for": "One beat in a right-hand wave sequence.",
         "caution": "Use after rightHandRaise or between wave beats.",
     },
     "leftHandRaise": {
         "category": "greeting",
-        "description": "Raise the left hand into a wave-ready pose.",
-        "best_for": "Starting a left-hand hello, goodbye, or welcome wave.",
+        "description": "Left shoulder lifts the upper arm, left elbow bends, and the left forearm rises upright with the hand near or above shoulder height.",
+        "best_for": "A visible raised-left-hand atom. Can start a wave or combine with rightHandRaise for both-hands-up gestures.",
         "caution": "Usually follow with leftHandWaveLeft/leftHandWaveRight or standby.",
     },
     "leftHandWaveRight": {
         "category": "greeting",
-        "description": "Left raised hand swings toward the robot's right side.",
+        "description": "Left arm remains raised while the upper arm and forearm shift the raised left hand across toward the robot's right side.",
         "best_for": "One beat in a left-hand wave sequence.",
         "caution": "Use after leftHandRaise or between wave beats.",
     },
     "leftHandWaveLeft": {
         "category": "greeting",
-        "description": "Left raised hand swings toward the robot's left side.",
+        "description": "Left arm remains raised while the upper arm and forearm shift the raised left hand toward the robot's left side.",
         "best_for": "One beat in a left-hand wave sequence.",
         "caution": "Use after leftHandRaise or between wave beats.",
     },
     "idea": {
         "category": "thinking",
-        "description": "Right arm bends into a compact thinking or insight pose.",
+        "description": "Right upper arm comes forward, right elbow bends close to the torso, and the right hand closes into a compact pose near the body.",
         "best_for": "Ideas, reasoning, hesitation, checking, or 'let me think' moments.",
         "caution": "Avoid repeating too often in one sequence.",
     },
     "rightHandReachOut": {
         "category": "presenting",
-        "description": "Right hand reaches forward as if offering or presenting information.",
-        "best_for": "Explaining, introducing a topic, inviting attention, or offering help.",
+        "description": "Right shoulder moves the upper arm forward, right elbow extends, and the right hand reaches outward in front of the robot.",
+        "best_for": "Explaining, introducing a topic, inviting attention, or offering help. Can combine with leftHandReachOut for two-handed presenting.",
         "caution": "Keep duration moderate so it does not look frozen.",
     },
     "leftHandReachOut": {
         "category": "presenting",
-        "description": "Left hand reaches forward as if offering or presenting information.",
-        "best_for": "Explaining, introducing a topic, inviting attention, or offering help.",
+        "description": "Left shoulder moves the upper arm forward, left elbow extends, and the left hand reaches outward in front of the robot.",
+        "best_for": "Explaining, introducing a topic, inviting attention, or offering help. Can combine with rightHandReachOut for two-handed presenting.",
         "caution": "Keep duration moderate so it does not look frozen.",
     },
     "spreadHands": {
         "category": "presenting",
-        "description": "Both arms open outward in a broad explanatory gesture.",
+        "description": "Both shoulders open the upper arms outward, both elbows stay partly bent, and the hands separate to the left and right sides.",
         "best_for": "Overview, comparison, welcoming a group, broad explanations, or 'on the one hand'.",
         "caution": "Large gesture; use sparingly for emphasis.",
     },
     "rightArmLiftFlat": {
         "category": "presenting",
-        "description": "Right arm extends/lifts flatter, like pointing attention to something.",
+        "description": "Right shoulder lifts the arm forward and upward while the right elbow stays extended, making the right arm look straighter and flatter.",
         "best_for": "Directing attention, showing a place or option, or emphasizing a point.",
         "caution": "Can look strong; avoid for gentle small talk.",
     },
     "leftArmLiftFlat": {
         "category": "presenting",
-        "description": "Left arm extends/lifts flatter, like pointing attention to something.",
+        "description": "Left shoulder lifts the arm forward and upward while the left elbow stays extended, making the left arm look straighter and flatter.",
         "best_for": "Directing attention, showing a place or option, or emphasizing a point.",
         "caution": "Can look strong; avoid for gentle small talk.",
     },
     "rightArmStretchAndRaise": {
         "category": "presenting",
-        "description": "Right arm stretches outward and raises, a large attention-guiding gesture.",
+        "description": "Right shoulder rotates and raises the upper arm outward while the right elbow stays extended, creating a large stretched raised right arm.",
         "best_for": "Welcoming, showcasing, or emphasizing an important point.",
         "caution": "Very expressive; do not use for every explanation.",
     },
     "leftShoulderYawOut": {
         "category": "micro_presenting",
-        "description": "Small left upper-arm outward adjustment.",
-        "best_for": "Subtle body language during longer speech.",
+        "description": "Left shoulder yaws the upper arm outward a small amount while the rest of the left arm mostly keeps its current shape.",
+        "best_for": "Subtle body-language variation during longer speech. Can combine with rightShoulderYawOut for balanced opening.",
         "caution": "Do not use alone as the whole response.",
     },
     "rightShoulderYawOut": {
         "category": "micro_presenting",
-        "description": "Small right upper-arm outward adjustment.",
-        "best_for": "Subtle body language during longer speech.",
+        "description": "Right shoulder yaws the upper arm outward a small amount while the rest of the right arm mostly keeps its current shape.",
+        "best_for": "Subtle body-language variation during longer speech. Can combine with leftShoulderYawOut for balanced opening.",
         "caution": "Do not use alone as the whole response.",
     },
     "rightForearmLiftSmall": {
         "category": "micro_presenting",
-        "description": "Small right forearm lift, like a mild conversational beat.",
-        "best_for": "Natural rhythm while speaking or lightly emphasizing a phrase.",
+        "description": "Right elbow bends a small amount so the right forearm lifts slightly while the upper arm stays mostly in place.",
+        "best_for": "Natural rhythm while speaking or lightly emphasizing a phrase. Can combine with leftForearmLiftSmall for balanced emphasis.",
         "caution": "Pair with a lowering or standby motion.",
     },
     "rightForearmLiftLarge": {
         "category": "micro_presenting",
-        "description": "Larger right forearm lift for stronger emphasis.",
+        "description": "Right elbow bends more strongly so the right forearm rises higher while the upper arm stays mostly in place.",
         "best_for": "Moderate emphasis in an explanation.",
         "caution": "Avoid for quiet or sensitive content.",
     },
     "rightForearmLowerSmall": {
         "category": "micro_presenting",
-        "description": "Small right forearm lowering motion.",
+        "description": "Right elbow relaxes a small amount so the right forearm lowers slightly from a lifted pose.",
         "best_for": "Recovering from a right forearm lift.",
         "caution": "Usually follows a right forearm lift.",
     },
     "rightForearmLowerLarge": {
         "category": "micro_presenting",
-        "description": "Larger right forearm lowering motion.",
+        "description": "Right elbow relaxes more strongly so the right forearm lowers from a higher lifted pose.",
         "best_for": "Recovering from a stronger right forearm lift.",
         "caution": "Usually follows rightForearmLiftLarge.",
     },
     "leftForearmLiftSmall": {
         "category": "micro_presenting",
-        "description": "Small left forearm lift, like a mild conversational beat.",
-        "best_for": "Natural rhythm while speaking or lightly emphasizing a phrase.",
+        "description": "Left elbow bends a small amount so the left forearm lifts slightly while the upper arm stays mostly in place.",
+        "best_for": "Natural rhythm while speaking or lightly emphasizing a phrase. Can combine with rightForearmLiftSmall for balanced emphasis.",
         "caution": "Pair with a lowering or standby motion.",
     },
     "leftForearmLiftLarge": {
         "category": "micro_presenting",
-        "description": "Larger left forearm lift for stronger emphasis.",
+        "description": "Left elbow bends more strongly so the left forearm rises higher while the upper arm stays mostly in place.",
         "best_for": "Moderate emphasis in an explanation.",
         "caution": "Avoid for quiet or sensitive content.",
     },
     "leftForearmLowerSmall": {
         "category": "micro_presenting",
-        "description": "Small left forearm lowering motion.",
+        "description": "Left elbow relaxes a small amount so the left forearm lowers slightly from a lifted pose.",
         "best_for": "Recovering from a left forearm lift.",
         "caution": "Usually follows a left forearm lift.",
     },
     "leftForearmLowerLarge": {
         "category": "micro_presenting",
-        "description": "Larger left forearm lowering motion.",
+        "description": "Left elbow relaxes more strongly so the left forearm lowers from a higher lifted pose.",
         "best_for": "Recovering from a stronger left forearm lift.",
         "caution": "Usually follows leftForearmLiftLarge.",
     },
     "eyesClose": {
         "category": "attention",
-        "description": "Brief eye-close or blink-like pause, if supported by the robot mapping.",
+        "description": "The controlled eye or gimbal actuators move into a brief closed-eye or blink-like facial pose, if mapped on the robot.",
         "best_for": "Soft pause, listening, calm acknowledgment, or reflective beat.",
         "caution": "May be subtle or unsupported by the current sender mapping.",
     },
@@ -255,7 +257,7 @@ SEQUENCE_PATTERNS = {
 
 
 def motion_catalog_text() -> str:
-    """Return an LLM-readable catalog of executable motion keyframes."""
+    """Return an LLM-readable catalog of executable atomic motion keyframes."""
     lines = []
     for name in MOTIONS:
         meta = MOTION_DESCRIPTIONS.get(name, {})
@@ -263,11 +265,11 @@ def motion_catalog_text() -> str:
         description = meta.get("description", "No description available.")
         best_for = meta.get("best_for", "")
         caution = meta.get("caution", "")
-        line = f"- {name} [{category}]: {description}"
+        line = f"- {name} [{category}]: Physical pose: {description}"
         if best_for:
-            line += f" Best for: {best_for}"
+            line += f" Usage hints: {best_for}"
         if caution:
-            line += f" Caution: {caution}"
+            line += f" Safety/transition: {caution}"
         lines.append(line)
     return "\n".join(lines)
 
@@ -276,7 +278,7 @@ def motion_catalog_text() -> str:
 # Motion presets (degrees). Only specify joints that differ from 0.
 # ---------------------------------------------------------------------------
 
-MOTIONS = { # one way for complex motion: define several mini-montions which cannot be reached by llm and wrap them into a bigger motion and make the bigger motion visible to LLM
+MOTIONS = {  # Primitive executable keyframes. Compose simultaneous poses with A+B in the planner/sender.
     "standby":{
         "RightShoulderPitch": 0,
         "RightShoulderRoll": 0,
@@ -310,6 +312,7 @@ MOTIONS = { # one way for complex motion: define several mini-montions which can
         "LowerGimbalLeft": 0,
         "LowerGimbalRight": 0,
     },
+    "stay": {},
     "leftThumbUp": {
         "LeftShoulderPitch": 71.0,
         "LeftThumbFinger": -44.0,
