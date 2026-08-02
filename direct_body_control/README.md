@@ -42,7 +42,7 @@ and sends that scalar radian value to one actuator.
 If Sophia's official motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` in
 both `robot_end/bodycontrol_tcp_scalar_index.py` and `local_end/llm_move_sender.py`.
 
-If `chat_history.jsonl` is produced on the robot, also copy this helper to the
+If the chat history file is produced on the robot, also copy this helper to the
 robot:
 
 ```text
@@ -53,8 +53,8 @@ Run it in another robot terminal to keep the local motion computer updated:
 
 ```bash
 python3 sync_chat_history_to_local.py \
-  --source ../chat_history.jsonl \
-  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl
+  --source ../chat_history.json \
+  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json
 ```
 
 The helper watches the file and uses `scp` only when it changes. For this to run
@@ -95,14 +95,15 @@ agents:
 "Hello, nice to meet you. Let me explain how this works." | Set-Content input.txt
 ```
 
-If `../chat_history.jsonl` exists relative to `local_end/`, the realtime script
+If `../chat_history.json` exists relative to `local_end/`, the realtime script
 watches that file instead, extracts the newest `role:"ai"` message into
 `input.txt`, and sends only that latest robot utterance to the motion agents.
+For older setups, it also falls back to `../chat_history.jsonl`.
 
 Typical layout:
 
 ```text
-direct_body_control/chat_history.jsonl
+direct_body_control/chat_history.json
 direct_body_control/local_end/realtime_chat_nonverbal_from_txt.py
 ```
 
@@ -112,7 +113,7 @@ Manual extraction:
 python extract_input_from_chat_history.py
 ```
 
-Continuous extraction if another program is writing the JSONL file:
+Continuous extraction if another program is writing the chat-history file:
 
 ```powershell
 python extract_input_from_chat_history.py --watch

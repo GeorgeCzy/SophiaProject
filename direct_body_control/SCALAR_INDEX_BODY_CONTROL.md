@@ -42,16 +42,16 @@ If Sophia's real motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` near
 the top of `bodycontrol_tcp_scalar_index.py`. The same table must match
 `llm_move_sender.py` on the local end.
 
-If `chat_history.jsonl` is stored on the robot, run this robot-end helper in a
+If the chat history file is stored on the robot, run this robot-end helper in a
 second terminal so the local motion agent can read the newest conversation:
 
 ```bash
 python3 sync_chat_history_to_local.py \
-  --source ../chat_history.jsonl \
-  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl
+  --source ../chat_history.json \
+  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json
 ```
 
-Edit the `--source` path if the robot writes `chat_history.jsonl` somewhere
+Edit the `--source` path if the robot writes `chat_history.json` somewhere
 else. Edit the `--dest` host/path to match the local machine running
 `realtime_chat_nonverbal_from_txt.py`.
 
@@ -88,14 +88,15 @@ agents:
 echo "Hello, nice to meet you. Let me explain how this works." > input.txt
 ```
 
-If `../chat_history.jsonl` exists relative to `local_end/`, the realtime script
+If `../chat_history.json` exists relative to `local_end/`, the realtime script
 watches that file instead, extracts the newest `role:"ai"` message into
 `input.txt`, and sends only that latest robot utterance to the motion agents.
+For older setups, it also falls back to `../chat_history.jsonl`.
 
 Typical layout:
 
 ```text
-direct_body_control/chat_history.jsonl
+direct_body_control/chat_history.json
 direct_body_control/local_end/realtime_chat_nonverbal_from_txt.py
 ```
 

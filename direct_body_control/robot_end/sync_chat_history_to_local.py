@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Robot-end helper: sync chat_history.jsonl to the local motion computer.
+Robot-end helper: sync the robot chat history file to the local motion computer.
 
-Run this on the robot end when chat_history.jsonl is produced there, while
+Run this on the robot end when chat_history is produced there, while
 realtime_chat_nonverbal_from_txt.py runs on the local end.
 """
 
@@ -16,8 +16,10 @@ from pathlib import Path
 
 
 # Edit these defaults on the robot if your local machine/user/path is different.
-DEFAULT_SOURCE = "../chat_history.jsonl"
-DEFAULT_DEST = "ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl"
+# The robot source file may be .json or .jsonl. The local destination defaults
+# to .json because realtime_chat_nonverbal_from_txt.py watches that path first.
+DEFAULT_SOURCE = "../chat_history.json"
+DEFAULT_DEST = "ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json"
 DEFAULT_INTERVAL_SEC = 0.5
 
 
@@ -116,17 +118,17 @@ def sync_loop(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Watch robot chat_history.jsonl and scp it to the local motion computer."
+        description="Watch the robot chat history file and scp it to the local motion computer."
     )
     parser.add_argument(
         "--source",
         default=os.getenv("SOPHIA_CHAT_HISTORY_SOURCE", DEFAULT_SOURCE),
-        help="Robot-side chat_history.jsonl path. Relative paths are resolved next to this script.",
+        help="Robot-side chat history path, for example ../chat_history.json. Relative paths are resolved next to this script.",
     )
     parser.add_argument(
         "--dest",
         default=os.getenv("SOPHIA_CHAT_HISTORY_REMOTE_DEST", DEFAULT_DEST),
-        help="scp destination, for example ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl",
+        help="scp destination watched by local realtime_chat_nonverbal_from_txt.py.",
     )
     parser.add_argument(
         "--interval",

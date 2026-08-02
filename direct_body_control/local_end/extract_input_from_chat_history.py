@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Extract the latest robot/AI utterance from chat_history.jsonl into input.txt.
+Extract the latest robot/AI utterance from chat_history.json or .jsonl into input.txt.
 
-The JSONL file may contain the whole conversation. This script keeps only the
-newest message whose role is ai, assistant, or robot.
+The chat-history file may contain the whole conversation as a JSON array/object
+or as JSON-lines. This script keeps only the newest message whose role is ai,
+assistant, or robot.
 """
 
 from __future__ import annotations
@@ -18,12 +19,78 @@ from typing import Any
 DEFAULT_ROLES = {"ai", "assistant", "robot"}
 
 
-def latest_robot_text(path: Path, roles: set[str] = DEFAULT_ROLES) -> tuple[str, tuple]:
-    latest_item: dict[str, Any] | None = None
-    latest_line_no = 0
+def text_from_content(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        parts = [text_from_content(item) for item in value]
+        return " ".join(part for part in parts if part).strip()
+    if isinstance(value, dict):
+        for key in ("text", "message", "content", "answer", "response", "utterance"):
+            text = text_from_content(value.get(key))
+            if text:
+                return text
+    return ""
 
-    with path.open("r", encoding="utf-8") as file:
-        for line_no, raw_line in enumerate(file, start=1):
+
+def role_from_item(item: dict[str, Any]) -> str:
+    for key in ("role", "speaker", "sender", "author", "from"):
+        value = item.get(key)
+        if isinstance(value, str):
+            return value.strip().lower()
+        if isinstance(value, dict):
+            for nested_key in ("role", "name", "type"):
+                nested = value.get(nested_key)
+                if isinstance(nested, str):
+                    return nested.strip().lower()
+    return ""
+
+
+def walk_history_json(data: Any):
+    if isinstance(data, list):
+        for item in data:
+            yield from walk_history_json(item)
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    if role_from_item(data) and text_from_content(data):
+        yield data
+
+    known_keys = (
+        "messages",
+        "history",
+        "conversation",
+        "conversations",
+        "chat_history",
+        "items",
+        "data",
+        "records",
+        "turns",
+    )
+    walked_known = False
+    for key in known_keys:
+        if key in data:
+            walked_known = True
+            yield from walk_history_json(data[key])
+
+    if not walked_known:
+        for value in data.values():
+            if isinstance(value, (dict, list)):
+                yield from walk_history_json(value)
+
+
+def read_history_items(path: Path) -> list[dict[str, Any]]:
+    raw_text = path.read_text(encoding="utf-8").strip()
+    if not raw_text:
+        return []
+
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError:
+        items: list[dict[str, Any]] = []
+        for raw_line in raw_text.splitlines():
             line = raw_line.strip()
             if not line:
                 continue
@@ -31,21 +98,33 @@ def latest_robot_text(path: Path, roles: set[str] = DEFAULT_ROLES) -> tuple[str,
                 item = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            if isinstance(item, dict):
+                items.append(item)
+        return items
 
-            role = str(item.get("role", "")).strip().lower()
-            text = str(item.get("text", "")).strip()
-            if role in roles and text:
-                latest_item = item
-                latest_line_no = line_no
+    return [item for item in walk_history_json(parsed) if isinstance(item, dict)]
+
+
+def latest_robot_text(path: Path, roles: set[str] = DEFAULT_ROLES) -> tuple[str, tuple]:
+    latest_item: dict[str, Any] | None = None
+    latest_index = 0
+
+    for index, item in enumerate(read_history_items(path), start=1):
+        role = role_from_item(item)
+        text = text_from_content(item)
+        if role in roles and text:
+            latest_item = item
+            latest_index = index
 
     if not latest_item:
         return "", ("empty",)
 
-    text = str(latest_item.get("text", "")).strip()
+    text = text_from_content(latest_item)
     signature = (
+        str(path),
         latest_item.get("time", ""),
         latest_item.get("sequence", ""),
-        latest_line_no,
+        latest_index,
         text,
     )
     return text, signature
@@ -73,12 +152,12 @@ def extract_once(history_path: Path, output_path: Path, roles: set[str]) -> tupl
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract latest AI/robot utterance from chat_history.jsonl to input.txt."
+        description="Extract latest AI/robot utterance from chat_history.json or .jsonl to input.txt."
     )
     parser.add_argument(
         "--history",
         default="",
-        help="Path to chat_history.jsonl. Default: ../chat_history.jsonl relative to this script.",
+        help="Path to chat-history file. Default: ../chat_history.json, falling back to ../chat_history.jsonl.",
     )
     parser.add_argument(
         "--output",
@@ -98,7 +177,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     script_dir = Path(__file__).resolve().parent
-    history_path = Path(args.history) if args.history else script_dir.parent / "chat_history.jsonl"
+    if args.history:
+        history_path = Path(args.history)
+    else:
+        json_path = script_dir.parent / "chat_history.json"
+        jsonl_path = script_dir.parent / "chat_history.jsonl"
+        history_path = json_path if json_path.exists() else jsonl_path
     output_path = Path(args.output) if args.output else script_dir / "input.txt"
     roles = {role.strip().lower() for role in args.roles.split(",") if role.strip()}
 

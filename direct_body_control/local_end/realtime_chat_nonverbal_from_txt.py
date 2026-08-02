@@ -134,12 +134,15 @@ INPUT_PATH = Path(
         str(Path(BASE_DIR) / "input.txt"),
     )
 )
-CHAT_HISTORY_PATH = Path(
-    os.getenv(
-        "SOPHIA_CHAT_HISTORY_FILE",
-        str(Path(BASE_DIR).parent / "chat_history.jsonl"),
-    )
-)
+CHAT_HISTORY_ENV = os.getenv("SOPHIA_CHAT_HISTORY_FILE")
+if CHAT_HISTORY_ENV:
+    CHAT_HISTORY_PATHS = [Path(CHAT_HISTORY_ENV)]
+else:
+    CHAT_HISTORY_PATHS = [
+        Path(BASE_DIR).parent / "chat_history.json",
+        Path(BASE_DIR).parent / "chat_history.jsonl",
+    ]
+CHAT_HISTORY_PATH = CHAT_HISTORY_PATHS[0]
 APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip().lower() in {
     "1",
     "true",
@@ -422,13 +425,78 @@ def handle_output(output_text: str, speech_duration_sec: float | None):
     run_move_sender()
 
 
-def extract_latest_ai_text_from_history(path: Path) -> tuple[str, tuple]:
-    """Return the newest AI/robot utterance from a JSONL chat history."""
-    latest_item: dict | None = None
-    latest_line_no = 0
+def _text_from_content(value) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        parts = [_text_from_content(item) for item in value]
+        return " ".join(part for part in parts if part).strip()
+    if isinstance(value, dict):
+        for key in ("text", "message", "content", "answer", "response", "utterance"):
+            text = _text_from_content(value.get(key))
+            if text:
+                return text
+    return ""
 
-    with path.open("r", encoding="utf-8") as file:
-        for line_no, raw_line in enumerate(file, start=1):
+
+def _role_from_item(item: dict) -> str:
+    for key in ("role", "speaker", "sender", "author", "from"):
+        value = item.get(key)
+        if isinstance(value, str):
+            return value.strip().lower()
+        if isinstance(value, dict):
+            for nested_key in ("role", "name", "type"):
+                nested = value.get(nested_key)
+                if isinstance(nested, str):
+                    return nested.strip().lower()
+    return ""
+
+
+def _walk_history_json(data):
+    if isinstance(data, list):
+        for item in data:
+            yield from _walk_history_json(item)
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    if _role_from_item(data) and _text_from_content(data):
+        yield data
+
+    known_keys = (
+        "messages",
+        "history",
+        "conversation",
+        "conversations",
+        "chat_history",
+        "items",
+        "data",
+        "records",
+        "turns",
+    )
+    walked_known = False
+    for key in known_keys:
+        if key in data:
+            walked_known = True
+            yield from _walk_history_json(data[key])
+
+    if not walked_known:
+        for value in data.values():
+            if isinstance(value, (dict, list)):
+                yield from _walk_history_json(value)
+
+
+def _read_history_items(path: Path) -> list[dict]:
+    raw_text = path.read_text(encoding="utf-8").strip()
+    if not raw_text:
+        return []
+
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError:
+        items: list[dict] = []
+        for raw_line in raw_text.splitlines():
             line = raw_line.strip()
             if not line:
                 continue
@@ -436,22 +504,35 @@ def extract_latest_ai_text_from_history(path: Path) -> tuple[str, tuple]:
                 item = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            if isinstance(item, dict):
+                items.append(item)
+        return items
 
-            role = str(item.get("role", "")).strip().lower()
-            text = str(item.get("text", "")).strip()
-            if role in {"ai", "assistant", "robot"} and text:
-                latest_item = item
-                latest_line_no = line_no
+    return [item for item in _walk_history_json(parsed) if isinstance(item, dict)]
+
+
+def extract_latest_ai_text_from_history(path: Path) -> tuple[str, tuple]:
+    """Return the newest AI/robot utterance from a JSON or JSONL chat history."""
+    latest_item: dict | None = None
+    latest_index = 0
+
+    for index, item in enumerate(_read_history_items(path), start=1):
+        role = _role_from_item(item)
+        text = _text_from_content(item)
+        if role in {"ai", "assistant", "robot"} and text:
+            latest_item = item
+            latest_index = index
 
     if not latest_item:
         return "", ("chat_history", 0)
 
-    text = str(latest_item.get("text", "")).strip()
+    text = _text_from_content(latest_item)
     signature = (
         "chat_history",
+        str(path),
         latest_item.get("time", ""),
         latest_item.get("sequence", ""),
-        latest_line_no,
+        latest_index,
         text,
     )
     return text, signature
@@ -471,12 +552,14 @@ def write_extracted_input_text(text: str) -> None:
 
 
 def read_motion_source() -> tuple[str, tuple]:
-    """Read either chat_history.jsonl or plain input.txt."""
-    if CHAT_HISTORY_PATH.exists():
-        content, signature = extract_latest_ai_text_from_history(CHAT_HISTORY_PATH)
+    """Read either a chat-history JSON/JSONL file or plain input.txt."""
+    for history_path in CHAT_HISTORY_PATHS:
+        if not history_path.exists():
+            continue
+        content, signature = extract_latest_ai_text_from_history(history_path)
         if content:
             write_extracted_input_text(content)
-        return content, signature
+            return content, signature
 
     if not INPUT_PATH.exists():
         raise FileNotFoundError(f"Input file does not exist yet: {INPUT_PATH}")
@@ -489,7 +572,10 @@ def read_motion_source() -> tuple[str, tuple]:
 
 def file_input_loop(ws):
     """Poll Sophia's latest spoken answer and plan motion when it updates."""
-    print(f"Watching chat-history file when present: {CHAT_HISTORY_PATH}")
+    print(
+        "Watching chat-history files when present: "
+        + ", ".join(str(path) for path in CHAT_HISTORY_PATHS)
+    )
     print(f"Watching/extracting spoken-answer file: {INPUT_PATH}")
     print(f"Watching duration hint: {DURATION_PATH}")
 
@@ -687,7 +773,7 @@ if __name__ == "__main__":
     print(f"PROMPT = {PROMPT_PATH}")
     print(f"ACTIONS = {ACTIONS_PATH}")
     print(f"INPUT  = {INPUT_PATH}")
-    print(f"CHAT_HISTORY = {CHAT_HISTORY_PATH}")
+    print(f"CHAT_HISTORY = {', '.join(str(path) for path in CHAT_HISTORY_PATHS)}")
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
