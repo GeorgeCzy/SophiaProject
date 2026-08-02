@@ -48,7 +48,7 @@ second terminal so the local motion agent can read the newest conversation:
 ```bash
 python3 sync_chat_history_to_local.py \
   --source ../chat_history.json \
-  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json
+  --dest ywguo@10.0.0.111:/home/ywguo/Documents/Sophia_VLA/chat_history.json
 ```
 
 Edit the `--source` path if the robot writes `chat_history.json` somewhere
@@ -56,15 +56,14 @@ else. Edit the `--dest` host/path to match the local machine running
 `realtime_chat_nonverbal_from_txt.py`.
 
 For quick testing without SSH keys, the helper can use `sshpass` with a local
-password file. Create this file once on the robot in the same folder as
-`sync_chat_history_to_local.py`:
+password file. On the first run, if `sync_password.txt` is missing, the helper
+asks for the SSH password once and saves it locally:
 
 ```bash
-printf 'your_ssh_password\n' > sync_password.txt
-chmod 600 sync_password.txt
+python3 sync_chat_history_to_local.py
 ```
 
-Then run sync normally:
+After that, run sync normally and it will autofill from `sync_password.txt`:
 
 ```bash
 python3 sync_chat_history_to_local.py \

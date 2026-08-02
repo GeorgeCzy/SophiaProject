@@ -7,6 +7,7 @@ realtime_chat_nonverbal_from_txt.py runs on the local end.
 """
 
 import argparse
+import getpass
 import os
 import shutil
 import subprocess
@@ -19,7 +20,7 @@ from pathlib import Path
 # The robot source file may be .json or .jsonl. The local destination defaults
 # to .json because realtime_chat_nonverbal_from_txt.py watches that path first.
 DEFAULT_SOURCE = "../chat_history.json"
-DEFAULT_DEST = "ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json"
+DEFAULT_DEST = "ywguo@10.0.0.111:/home/ywguo/Documents/Sophia_VLA/chat_history.json"
 DEFAULT_INTERVAL_SEC = 0.5
 DEFAULT_PASSWORD_ENV = "SOPHIA_SYNC_PASSWORD"
 DEFAULT_PASSWORD_FILE = "sync_password.txt"
@@ -44,6 +45,27 @@ def resolve_optional_file(path_text: str) -> Path | None:
 def file_signature(path: Path) -> tuple[int, int]:
     stat = path.stat()
     return stat.st_mtime_ns, stat.st_size
+
+
+def maybe_create_password_file(password_file: Path | None, prompt: bool) -> None:
+    if password_file is None or password_file.exists() or not prompt:
+        return
+    if not sys.stdin.isatty():
+        return
+
+    password = getpass.getpass(
+        f"[sync] SSH password for scp, saved to {password_file} "
+        "(leave empty to use normal ssh/scp): "
+    )
+    if not password:
+        return
+
+    password_file.write_text(password + "\n", encoding="utf-8")
+    try:
+        password_file.chmod(0o600)
+    except OSError:
+        pass
+    print(f"[sync] saved password file: {password_file}", flush=True)
 
 
 def run_scp(
@@ -205,6 +227,11 @@ def parse_args() -> argparse.Namespace:
         default=os.getenv("SOPHIA_CHAT_HISTORY_PASSWORD_FILE", DEFAULT_PASSWORD_FILE),
         help="File containing SSH password for sshpass. Default: sync_password.txt beside this script. Empty disables.",
     )
+    parser.add_argument(
+        "--no-password-prompt",
+        action="store_true",
+        help="Do not prompt to create sync_password.txt when it is missing.",
+    )
     return parser.parse_args()
 
 
@@ -212,6 +239,7 @@ def main() -> int:
     args = parse_args()
     source = resolve_source(args.source)
     password_file = resolve_optional_file(args.password_file)
+    maybe_create_password_file(password_file, prompt=not args.no_password_prompt)
     try:
         return sync_loop(
             source=source,
