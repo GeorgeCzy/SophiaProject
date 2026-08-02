@@ -10,7 +10,7 @@ import certifi
 import websocket
 import time
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from nonverbal_motion_agent import (
     MotionRequest,
@@ -32,9 +32,77 @@ SOPHIA_FACE_HCI_DIR = Path(BASE_DIR) / "Sophia_Face_HCI"
 if str(SOPHIA_FACE_HCI_DIR) not in sys.path:
     sys.path.insert(0, str(SOPHIA_FACE_HCI_DIR))
 
-from settings import load_config
+class _RealtimeConfig:
+    def __init__(self, api_key: str, realtime_url: str, realtime_proxy: str | bool | None):
+        self.api_key = api_key
+        self.realtime_url = realtime_url
+        self.realtime_proxy = realtime_proxy
 
-CONFIG = load_config()
+
+def _load_api_key_from_dotenv() -> str:
+    for dotenv_path in (Path(BASE_DIR) / ".env", SOPHIA_FACE_HCI_DIR / ".env"):
+        if not dotenv_path.exists():
+            continue
+        for raw_line in dotenv_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            if key.strip() in {"OPENAI_API_KEY", "OpenAI_API_KEY"}:
+                return value.strip().strip("'\"")
+    return ""
+
+
+def _resolve_realtime_url() -> str:
+    realtime_url = os.getenv("OPENAI_REALTIME_URL") or os.getenv("OpenAI_REALTIME_URL")
+    if realtime_url and realtime_url.strip():
+        return realtime_url.strip()
+
+    realtime_model = (
+        os.getenv("OPENAI_REALTIME_MODEL", "").strip()
+        or os.getenv("OpenAI_REALTIME_MODEL", "").strip()
+        or "gpt-realtime"
+    )
+    return f"wss://api.openai.com/v1/realtime?model={quote(realtime_model, safe='')}"
+
+
+def _resolve_realtime_proxy() -> str | bool | None:
+    proxy = os.getenv("OPENAI_WS_PROXY")
+    if proxy is None:
+        proxy = os.getenv("OpenAI_WS_PROXY")
+    if proxy is None:
+        return "http://127.0.0.1:7897"
+    proxy = proxy.strip()
+    return proxy or None
+
+
+def _load_local_config() -> _RealtimeConfig:
+    api_key = (
+        os.getenv("OPENAI_API_KEY", "").strip()
+        or os.getenv("OpenAI_API_KEY", "").strip()
+        or _load_api_key_from_dotenv()
+    )
+    if not api_key:
+        raise RuntimeError(
+            "OPENAI_API_KEY is required. Export OPENAI_API_KEY or add it to "
+            f"{Path(BASE_DIR) / '.env'}."
+        )
+    return _RealtimeConfig(
+        api_key=api_key,
+        realtime_url=_resolve_realtime_url(),
+        realtime_proxy=_resolve_realtime_proxy(),
+    )
+
+
+try:
+    from settings import load_config as _load_config_from_settings
+except ModuleNotFoundError as exc:
+    if exc.name != "settings":
+        raise
+    CONFIG = _load_local_config()
+else:
+    CONFIG = _load_config_from_settings()
+
 URL = CONFIG.realtime_url
 LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"1", "true", "yes"}
 INPUT_PATH = Path(
