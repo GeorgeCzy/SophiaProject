@@ -22,9 +22,19 @@ DEFAULT_SOURCE = "../chat_history.json"
 DEFAULT_DEST = "ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json"
 DEFAULT_INTERVAL_SEC = 0.5
 DEFAULT_PASSWORD_ENV = "SOPHIA_SYNC_PASSWORD"
+DEFAULT_PASSWORD_FILE = "sync_password.txt"
 
 
 def resolve_source(path_text: str) -> Path:
+    path = Path(path_text).expanduser()
+    if path.is_absolute():
+        return path
+    return (Path(__file__).resolve().parent / path).resolve()
+
+
+def resolve_optional_file(path_text: str) -> Path | None:
+    if not path_text:
+        return None
     path = Path(path_text).expanduser()
     if path.is_absolute():
         return path
@@ -43,15 +53,24 @@ def run_scp(
     dry_run: bool,
     verbose: bool,
     password_env: str,
+    password_file: Path | None,
 ) -> bool:
     if not dest:
         raise ValueError("destination is empty; set DEFAULT_DEST or pass --dest")
     if shutil.which("scp") is None:
         raise RuntimeError("scp command not found; install openssh-client on the robot")
 
-    password = os.getenv(password_env, "") if password_env else ""
+    use_password_file = password_file is not None and password_file.exists()
+    password = "" if use_password_file else (os.getenv(password_env, "") if password_env else "")
     run_env = None
-    if password:
+    if use_password_file:
+        if not dry_run and shutil.which("sshpass") is None:
+            raise RuntimeError(
+                f"{password_file} exists, but sshpass was not found. "
+                "Install sshpass on the robot or remove the password file and use SSH keys."
+            )
+        cmd = ["sshpass", "-f", str(password_file), "scp"]
+    elif password:
         if not dry_run and shutil.which("sshpass") is None:
             raise RuntimeError(
                 f"{password_env} is set, but sshpass was not found. "
@@ -95,11 +114,14 @@ def sync_loop(
     dry_run: bool,
     verbose: bool,
     password_env: str,
+    password_file: Path | None,
 ) -> int:
     print(f"[sync] source = {source}", flush=True)
     print(f"[sync] dest   = {dest}", flush=True)
     print(f"[sync] poll   = {interval:.2f}s", flush=True)
-    if password_env and os.getenv(password_env, ""):
+    if password_file is not None and password_file.exists():
+        print(f"[sync] password = {password_file} via sshpass", flush=True)
+    elif password_env and os.getenv(password_env, ""):
         print(f"[sync] password = ${password_env} via sshpass", flush=True)
 
     last_signature: tuple[int, int] | None = None
@@ -133,6 +155,7 @@ def sync_loop(
                 dry_run=dry_run,
                 verbose=verbose,
                 password_env=password_env,
+                password_file=password_file,
             )
             if ok:
                 last_signature = signature
@@ -177,12 +200,18 @@ def parse_args() -> argparse.Namespace:
         default=os.getenv("SOPHIA_CHAT_HISTORY_PASSWORD_ENV", DEFAULT_PASSWORD_ENV),
         help="Environment variable containing SSH password for sshpass. Empty disables password auto-fill.",
     )
+    parser.add_argument(
+        "--password-file",
+        default=os.getenv("SOPHIA_CHAT_HISTORY_PASSWORD_FILE", DEFAULT_PASSWORD_FILE),
+        help="File containing SSH password for sshpass. Default: sync_password.txt beside this script. Empty disables.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     source = resolve_source(args.source)
+    password_file = resolve_optional_file(args.password_file)
     try:
         return sync_loop(
             source=source,
@@ -193,6 +222,7 @@ def main() -> int:
             dry_run=args.dry_run,
             verbose=args.verbose,
             password_env=args.password_env,
+            password_file=password_file,
         )
     except KeyboardInterrupt:
         print("\n[sync] stopped", flush=True)

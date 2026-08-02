@@ -61,17 +61,25 @@ The helper watches the file and uses `scp` only when it changes. For this to run
 without repeated password prompts, set up SSH login from the robot to the local
 machine first.
 
-For quick testing without SSH keys, the helper can use `sshpass` from an
-environment variable:
+For quick testing without SSH keys, the helper can use `sshpass` with a local
+password file. Create this file once on the robot in the same folder as
+`sync_chat_history_to_local.py`:
 
 ```bash
-export SOPHIA_SYNC_PASSWORD='your_ssh_password'
+printf 'your_ssh_password\n' > sync_password.txt
+chmod 600 sync_password.txt
+```
+
+Then run sync normally:
+
+```bash
 python3 sync_chat_history_to_local.py \
   --source ../chat_history.json \
   --dest ywguo@10.0.0.111:/home/ywguo/Documents/Sophia_VLA/chat_history.json
 ```
 
-If `sshpass` is missing on the robot, install it or use SSH keys instead.
+`sync_password.txt` is ignored by Git. If `sshpass` is missing on the robot,
+install it or use SSH keys instead.
 
 ## Local End
 
