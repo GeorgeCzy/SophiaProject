@@ -28,6 +28,11 @@ PROMPT_PATH = os.path.join(BASE_DIR, "system_prompt.txt")
 ACTIONS_PATH = os.path.join(BASE_DIR, "actions.txt")
 SYNC_DIR = Path(os.getenv("SOPHIA_ROBOT_SYNC_DIR", "/tmp/robot_sync"))
 DURATION_PATH = Path(os.getenv("SOPHIA_NONVERBAL_DURATION_FILE", str(SYNC_DIR / "audio_response.duration")))
+WAIT_FOR_AUDIO_READY = os.getenv(
+    "SOPHIA_NONVERBAL_WAIT_FOR_AUDIO_READY",
+    "0",
+).strip().lower() in {"1", "true", "yes", "on"}
+AUDIO_READY_TIMEOUT_SEC = float(os.getenv("SOPHIA_NONVERBAL_AUDIO_READY_TIMEOUT", "30.0"))
 SOPHIA_FACE_HCI_DIR = Path(BASE_DIR) / "Sophia_Face_HCI"
 if str(SOPHIA_FACE_HCI_DIR) not in sys.path:
     sys.path.insert(0, str(SOPHIA_FACE_HCI_DIR))
@@ -323,23 +328,27 @@ def run_move_sender():
         except Exception as e:
             print(f"Failed to run generating_random_gesture.py: {e}", flush=True)
 
-    wait_start = time.time()
-    wait_reported = False
-    while not (SYNC_DIR / "audio_response.ready").exists():
-        if not wait_reported and time.time() - wait_start > 2.0:
-            print(
-                f"Waiting for {SYNC_DIR / 'audio_response.ready'} before sending motions...",
-                flush=True,
-            )
-            wait_reported = True
-        if time.time() - wait_start > 30.0:
-            print(
-                "Timed out waiting for audio_response.ready; actions.txt was written, "
-                "but the motion sender was not run.",
-                flush=True,
-            )
-            return
-        time.sleep(0.1)
+    if WAIT_FOR_AUDIO_READY:
+        wait_start = time.time()
+        wait_reported = False
+        while not (SYNC_DIR / "audio_response.ready").exists():
+            if not wait_reported and time.time() - wait_start > 2.0:
+                print(
+                    f"Waiting for {SYNC_DIR / 'audio_response.ready'} before sending motions...",
+                    flush=True,
+                )
+                wait_reported = True
+            if time.time() - wait_start > AUDIO_READY_TIMEOUT_SEC:
+                print(
+                    "Timed out waiting for audio_response.ready; actions.txt was written, "
+                    "but the motion sender was not run.",
+                    flush=True,
+                )
+                return
+            time.sleep(0.1)
+    else:
+        print("Audio-ready wait disabled; sending motions immediately.", flush=True)
+
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
         sender_cmd = [
             sys.executable,
@@ -785,6 +794,7 @@ if __name__ == "__main__":
     print(f"INPUT  = {INPUT_PATH}")
     print(f"CHAT_HISTORY = {', '.join(str(path) for path in CHAT_HISTORY_PATHS)}")
     print(f"DURATION = {DURATION_PATH}")
+    print(f"WAIT_FOR_AUDIO_READY = {WAIT_FOR_AUDIO_READY}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
