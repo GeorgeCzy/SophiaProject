@@ -556,10 +556,12 @@ def read_motion_source() -> tuple[str, tuple]:
     for history_path in CHAT_HISTORY_PATHS:
         if not history_path.exists():
             continue
+        stat = history_path.stat()
         content, signature = extract_latest_ai_text_from_history(history_path)
         if content:
             write_extracted_input_text(content)
             return content, signature
+        return "", ("chat_history_no_robot_text", str(history_path), stat.st_mtime_ns, stat.st_size)
 
     if not INPUT_PATH.exists():
         raise FileNotFoundError(f"Input file does not exist yet: {INPUT_PATH}")
@@ -580,6 +582,7 @@ def file_input_loop(ws):
     print(f"Watching duration hint: {DURATION_PATH}")
 
     last_sent_signature: tuple | None = None
+    last_empty_signature: tuple | None = None
     missing_reported = False
 
     while not stop_event.is_set():
@@ -601,6 +604,13 @@ def file_input_loop(ws):
 
         # ✅ 空文件 → 不发送
         if not content:
+            if signature != last_empty_signature:
+                print(
+                    "Chat history is present, but no latest ai/assistant/robot text "
+                    "was extracted yet; waiting for robot reply.",
+                    flush=True,
+                )
+                last_empty_signature = signature
             stop_event.wait(0.5)
             continue
 
