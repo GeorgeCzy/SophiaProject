@@ -55,6 +55,16 @@ Edit the `--source` path if the robot writes `chat_history.json` somewhere
 else. Edit the `--dest` host/path to match the local machine running
 `realtime_chat_nonverbal_from_txt.py`.
 
+For quick testing without SSH keys, the helper can use `sshpass` from an
+environment variable:
+
+```bash
+export SOPHIA_SYNC_PASSWORD='your_ssh_password'
+python3 sync_chat_history_to_local.py \
+  --source ../chat_history.json \
+  --dest ywguo@10.0.0.111:/home/ywguo/Documents/Sophia_VLA/chat_history.json
+```
+
 ## Local End
 
 Copy or keep these files together locally, in the same folder:

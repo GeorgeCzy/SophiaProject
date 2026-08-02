@@ -21,6 +21,7 @@ from pathlib import Path
 DEFAULT_SOURCE = "../chat_history.json"
 DEFAULT_DEST = "ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.json"
 DEFAULT_INTERVAL_SEC = 0.5
+DEFAULT_PASSWORD_ENV = "SOPHIA_SYNC_PASSWORD"
 
 
 def resolve_source(path_text: str) -> Path:
@@ -35,13 +36,33 @@ def file_signature(path: Path) -> tuple[int, int]:
     return stat.st_mtime_ns, stat.st_size
 
 
-def run_scp(source: Path, dest: str, timeout: float, dry_run: bool, verbose: bool) -> bool:
+def run_scp(
+    source: Path,
+    dest: str,
+    timeout: float,
+    dry_run: bool,
+    verbose: bool,
+    password_env: str,
+) -> bool:
     if not dest:
         raise ValueError("destination is empty; set DEFAULT_DEST or pass --dest")
     if shutil.which("scp") is None:
         raise RuntimeError("scp command not found; install openssh-client on the robot")
 
-    cmd = ["scp"]
+    password = os.getenv(password_env, "") if password_env else ""
+    run_env = None
+    if password:
+        if not dry_run and shutil.which("sshpass") is None:
+            raise RuntimeError(
+                f"{password_env} is set, but sshpass was not found. "
+                "Install sshpass on the robot or unset the password env var and use SSH keys."
+            )
+        cmd = ["sshpass", "-e", "scp"]
+        run_env = os.environ.copy()
+        run_env["SSHPASS"] = password
+    else:
+        cmd = ["scp"]
+
     if verbose:
         cmd.append("-v")
     cmd.extend(["-o", "ConnectTimeout=5", str(source), dest])
@@ -50,7 +71,7 @@ def run_scp(source: Path, dest: str, timeout: float, dry_run: bool, verbose: boo
         return True
 
     try:
-        result = subprocess.run(cmd, check=False, timeout=timeout)
+        result = subprocess.run(cmd, check=False, timeout=timeout, env=run_env)
     except subprocess.TimeoutExpired:
         print(f"[WARN] scp timed out after {timeout:.1f}s", flush=True)
         return False
@@ -73,10 +94,13 @@ def sync_loop(
     once: bool,
     dry_run: bool,
     verbose: bool,
+    password_env: str,
 ) -> int:
     print(f"[sync] source = {source}", flush=True)
     print(f"[sync] dest   = {dest}", flush=True)
     print(f"[sync] poll   = {interval:.2f}s", flush=True)
+    if password_env and os.getenv(password_env, ""):
+        print(f"[sync] password = ${password_env} via sshpass", flush=True)
 
     last_signature: tuple[int, int] | None = None
     missing_reported = False
@@ -102,7 +126,14 @@ def sync_loop(
             continue
 
         if signature != last_signature:
-            ok = run_scp(source, dest, timeout=timeout, dry_run=dry_run, verbose=verbose)
+            ok = run_scp(
+                source,
+                dest,
+                timeout=timeout,
+                dry_run=dry_run,
+                verbose=verbose,
+                password_env=password_env,
+            )
             if ok:
                 last_signature = signature
                 print(
@@ -141,6 +172,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--once", action="store_true", help="Copy once and exit.")
     parser.add_argument("--dry-run", action="store_true", help="Print scp command without copying.")
     parser.add_argument("--verbose", action="store_true", help="Run scp with -v for SSH debugging.")
+    parser.add_argument(
+        "--password-env",
+        default=os.getenv("SOPHIA_CHAT_HISTORY_PASSWORD_ENV", DEFAULT_PASSWORD_ENV),
+        help="Environment variable containing SSH password for sshpass. Empty disables password auto-fill.",
+    )
     return parser.parse_args()
 
 
@@ -156,6 +192,7 @@ def main() -> int:
             once=args.once,
             dry_run=args.dry_run,
             verbose=args.verbose,
+            password_env=args.password_env,
         )
     except KeyboardInterrupt:
         print("\n[sync] stopped", flush=True)
