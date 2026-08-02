@@ -33,9 +33,11 @@ if str(SOPHIA_FACE_HCI_DIR) not in sys.path:
     sys.path.insert(0, str(SOPHIA_FACE_HCI_DIR))
 
 # Optional local convenience config.
-# If DEFAULT_API_KEY is non-empty, this file will use these values directly and
-# will not require Sophia_Face_HCI/settings.py or environment variables.
+# By default this script prefers settings.py when it is available. Set
+# USE_DIRECT_CONFIG = True only if you want to ignore settings.py and use the
+# direct values below.
 # Keep this file private if you paste a real API key here.
+USE_DIRECT_CONFIG = False
 DEFAULT_API_KEY = ""
 DEFAULT_REALTIME_MODEL = "gpt-realtime"
 DEFAULT_REALTIME_URL = ""
@@ -109,8 +111,9 @@ def _load_local_config() -> _RealtimeConfig:
     )
 
 
-if DEFAULT_API_KEY.strip():
+if USE_DIRECT_CONFIG:
     CONFIG = _load_local_config()
+    CONFIG_SOURCE = "direct config in realtime_chat_nonverbal_from_txt.py"
 else:
     try:
         from settings import load_config as _load_config_from_settings
@@ -118,8 +121,10 @@ else:
         if exc.name != "settings":
             raise
         CONFIG = _load_local_config()
+        CONFIG_SOURCE = "direct config fallback because settings.py was not found"
     else:
         CONFIG = _load_config_from_settings()
+        CONFIG_SOURCE = "settings.py"
 
 URL = CONFIG.realtime_url
 LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"1", "true", "yes"}
@@ -676,6 +681,7 @@ if __name__ == "__main__":
     proxy_kwargs = _websocket_proxy_kwargs(CONFIG.realtime_proxy)
 
     print("starting websocket...")
+    print(f"CONFIG = {CONFIG_SOURCE}")
     print(f"URL    = {URL}")
     print(f"MODEL  = {_model_name_from_url(URL)}")
     print(f"PROMPT = {PROMPT_PATH}")
