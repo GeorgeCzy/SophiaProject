@@ -42,6 +42,19 @@ If Sophia's real motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` near
 the top of `bodycontrol_tcp_scalar_index.py`. The same table must match
 `llm_move_sender.py` on the local end.
 
+If `chat_history.jsonl` is stored on the robot, run this robot-end helper in a
+second terminal so the local motion agent can read the newest conversation:
+
+```bash
+python3 sync_chat_history_to_local.py \
+  --source ../chat_history.jsonl \
+  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl
+```
+
+Edit the `--source` path if the robot writes `chat_history.jsonl` somewhere
+else. Edit the `--dest` host/path to match the local machine running
+`realtime_chat_nonverbal_from_txt.py`.
+
 ## Local End
 
 Copy or keep these files together locally, in the same folder:

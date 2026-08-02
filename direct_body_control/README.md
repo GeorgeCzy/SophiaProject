@@ -42,6 +42,25 @@ and sends that scalar radian value to one actuator.
 If Sophia's official motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` in
 both `robot_end/bodycontrol_tcp_scalar_index.py` and `local_end/llm_move_sender.py`.
 
+If `chat_history.jsonl` is produced on the robot, also copy this helper to the
+robot:
+
+```text
+robot_end/sync_chat_history_to_local.py
+```
+
+Run it in another robot terminal to keep the local motion computer updated:
+
+```bash
+python3 sync_chat_history_to_local.py \
+  --source ../chat_history.jsonl \
+  --dest ywguo@linux:/home/ywguo/Documents/Sophia_VLA/chat_history.jsonl
+```
+
+The helper watches the file and uses `scp` only when it changes. For this to run
+without repeated password prompts, set up SSH login from the robot to the local
+machine first.
+
 ## Local End
 
 Use these files locally, in the same folder:
