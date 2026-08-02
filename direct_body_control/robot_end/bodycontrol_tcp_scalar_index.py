@@ -137,8 +137,7 @@ class ScalarIndexBodyBridgeServer:
         self.set_control = rospy.ServiceProxy("/hr/actuators/set_control", SetActuatorsControl)
 
         self._set_manual_for_actuators()
-        self._publish(*reset_pose())
-        rospy.loginfo("[ScalarIndexBodyBridge] sent startup zero pose")
+        self._publish_startup_reset()
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -204,6 +203,16 @@ class ScalarIndexBodyBridgeServer:
         msg.names = list(names)
         msg.values = list(values)
         self.pose_pub.publish(msg)
+
+    def _publish_startup_reset(self, repeats=10, dt=0.1):
+        names, values = reset_pose()
+        for _ in range(repeats):
+            self._publish(names, values)
+            rospy.sleep(dt)
+        rospy.loginfo(
+            "[ScalarIndexBodyBridge] sent startup zero pose (%s repeats)",
+            repeats,
+        )
 
     def _send(self, conn, code, result=None, error=""):
         response = {"code": code}
