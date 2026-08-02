@@ -35,20 +35,16 @@ def file_signature(path: Path) -> tuple[int, int]:
     return stat.st_mtime_ns, stat.st_size
 
 
-def run_scp(source: Path, dest: str, timeout: float, dry_run: bool) -> bool:
+def run_scp(source: Path, dest: str, timeout: float, dry_run: bool, verbose: bool) -> bool:
     if not dest:
         raise ValueError("destination is empty; set DEFAULT_DEST or pass --dest")
     if shutil.which("scp") is None:
         raise RuntimeError("scp command not found; install openssh-client on the robot")
 
-    cmd = [
-        "scp",
-        "-q",
-        "-o",
-        "ConnectTimeout=5",
-        str(source),
-        dest,
-    ]
+    cmd = ["scp"]
+    if verbose:
+        cmd.append("-v")
+    cmd.extend(["-o", "ConnectTimeout=5", str(source), dest])
     if dry_run:
         print("[DRY]", " ".join(cmd), flush=True)
         return True
@@ -60,7 +56,11 @@ def run_scp(source: Path, dest: str, timeout: float, dry_run: bool) -> bool:
         return False
 
     if result.returncode != 0:
-        print(f"[WARN] scp failed with code {result.returncode}", flush=True)
+        print(
+            f"[WARN] scp failed with code {result.returncode}. "
+            "Check the scp/ssh error printed above.",
+            flush=True,
+        )
         return False
     return True
 
@@ -72,6 +72,7 @@ def sync_loop(
     timeout: float,
     once: bool,
     dry_run: bool,
+    verbose: bool,
 ) -> int:
     print(f"[sync] source = {source}", flush=True)
     print(f"[sync] dest   = {dest}", flush=True)
@@ -101,7 +102,7 @@ def sync_loop(
             continue
 
         if signature != last_signature:
-            ok = run_scp(source, dest, timeout=timeout, dry_run=dry_run)
+            ok = run_scp(source, dest, timeout=timeout, dry_run=dry_run, verbose=verbose)
             if ok:
                 last_signature = signature
                 print(
@@ -139,6 +140,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=10.0, help="scp timeout in seconds.")
     parser.add_argument("--once", action="store_true", help="Copy once and exit.")
     parser.add_argument("--dry-run", action="store_true", help="Print scp command without copying.")
+    parser.add_argument("--verbose", action="store_true", help="Run scp with -v for SSH debugging.")
     return parser.parse_args()
 
 
@@ -153,6 +155,7 @@ def main() -> int:
             timeout=args.timeout,
             once=args.once,
             dry_run=args.dry_run,
+            verbose=args.verbose,
         )
     except KeyboardInterrupt:
         print("\n[sync] stopped", flush=True)
