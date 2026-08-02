@@ -32,6 +32,16 @@ SOPHIA_FACE_HCI_DIR = Path(BASE_DIR) / "Sophia_Face_HCI"
 if str(SOPHIA_FACE_HCI_DIR) not in sys.path:
     sys.path.insert(0, str(SOPHIA_FACE_HCI_DIR))
 
+# Optional local convenience config.
+# If DEFAULT_API_KEY is non-empty, this file will use these values directly and
+# will not require Sophia_Face_HCI/settings.py or environment variables.
+# Keep this file private if you paste a real API key here.
+DEFAULT_API_KEY = ""
+DEFAULT_REALTIME_MODEL = "gpt-realtime"
+DEFAULT_REALTIME_URL = ""
+DEFAULT_REALTIME_PROXY = "http://127.0.0.1:7897"
+
+
 class _RealtimeConfig:
     def __init__(self, api_key: str, realtime_url: str, realtime_proxy: str | bool | None):
         self.api_key = api_key
@@ -57,11 +67,13 @@ def _resolve_realtime_url() -> str:
     realtime_url = os.getenv("OPENAI_REALTIME_URL") or os.getenv("OpenAI_REALTIME_URL")
     if realtime_url and realtime_url.strip():
         return realtime_url.strip()
+    if DEFAULT_REALTIME_URL.strip():
+        return DEFAULT_REALTIME_URL.strip()
 
     realtime_model = (
         os.getenv("OPENAI_REALTIME_MODEL", "").strip()
         or os.getenv("OpenAI_REALTIME_MODEL", "").strip()
-        or "gpt-realtime"
+        or DEFAULT_REALTIME_MODEL
     )
     return f"wss://api.openai.com/v1/realtime?model={quote(realtime_model, safe='')}"
 
@@ -71,7 +83,9 @@ def _resolve_realtime_proxy() -> str | bool | None:
     if proxy is None:
         proxy = os.getenv("OpenAI_WS_PROXY")
     if proxy is None:
-        return "http://127.0.0.1:7897"
+        proxy = DEFAULT_REALTIME_PROXY
+    if proxy is None:
+        return None
     proxy = proxy.strip()
     return proxy or None
 
@@ -80,6 +94,7 @@ def _load_local_config() -> _RealtimeConfig:
     api_key = (
         os.getenv("OPENAI_API_KEY", "").strip()
         or os.getenv("OpenAI_API_KEY", "").strip()
+        or DEFAULT_API_KEY.strip()
         or _load_api_key_from_dotenv()
     )
     if not api_key:
@@ -94,14 +109,17 @@ def _load_local_config() -> _RealtimeConfig:
     )
 
 
-try:
-    from settings import load_config as _load_config_from_settings
-except ModuleNotFoundError as exc:
-    if exc.name != "settings":
-        raise
+if DEFAULT_API_KEY.strip():
     CONFIG = _load_local_config()
 else:
-    CONFIG = _load_config_from_settings()
+    try:
+        from settings import load_config as _load_config_from_settings
+    except ModuleNotFoundError as exc:
+        if exc.name != "settings":
+            raise
+        CONFIG = _load_local_config()
+    else:
+        CONFIG = _load_config_from_settings()
 
 URL = CONFIG.realtime_url
 LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"1", "true", "yes"}
