@@ -14,7 +14,6 @@ import argparse
 import json
 import math
 import re
-import socket
 import sys
 import time
 from typing import Dict, List, Tuple
@@ -88,14 +87,6 @@ def reset_commands() -> List[Tuple[int, float]]:
     return [(index, 0.0) for index in ALL_INDICES]
 
 
-def coalesce_commands(commands: List[Tuple[int, float]]) -> List[Tuple[int, float]]:
-    """Keep one value per motor index; later duplicate commands win."""
-    merged: Dict[int, float] = {}
-    for index, value in commands:
-        merged[index] = value
-    return sorted(merged.items(), key=lambda item: item[0])
-
-
 def parse_action_pairs(text: str) -> List[Tuple[str, float]]:
     """
     Parse action pairs from text. Supports:
@@ -161,63 +152,13 @@ def send_commands(
     port: int,
     timeout: float,
     dry_run: bool,
-    use_batch: bool,
 ) -> None:
-    commands = coalesce_commands(commands)
-    if not commands:
-        return
-
-    if dry_run and use_batch:
-        print(f"  [DRY][BATCH] {len(commands)} motor commands", flush=True)
-        for index, value in commands:
-            actuator = MOTOR_INDEX_TO_ACTUATOR.get(index, "<unknown>")
-            print(f"    index={index} actuator={actuator} value_rad={value:.6f}", flush=True)
-        return
-
-    if use_batch:
-        try:
-            result = call_remote_batch(commands, host=host, port=port, timeout=timeout)
-        except Exception as exc:
-            print(
-                f"[WARN] batch send failed ({exc}); falling back to one command per socket",
-                flush=True,
-            )
-        else:
-            print(f"  [BATCH] sent {result}", flush=True)
-            return
-
     for index, value in commands:
         actuator = MOTOR_INDEX_TO_ACTUATOR.get(index, "<unknown>")
         if dry_run:
             print(f"  [DRY] index={index} actuator={actuator} value_rad={value:.6f}", flush=True)
         else:
             Sophia_control.call_remote(index=index, value=value, host=host, port=port, timeout=timeout)
-
-
-def call_remote_batch(
-    commands: List[Tuple[int, float]],
-    *,
-    host: str,
-    port: int,
-    timeout: float,
-):
-    request = {
-        "unit": "rad",
-        "commands": [
-            {"index": index, "value": value}
-            for index, value in commands
-        ],
-    }
-    with socket.create_connection((host, port), timeout=timeout) as sock:
-        sock.sendall(json.dumps(request).encode("utf-8"))
-        data = sock.recv(65536).decode("utf-8")
-
-    response = json.loads(data)
-    if not isinstance(response, dict):
-        raise TypeError(f"Response is not a JSON object: {response!r}")
-    if response.get("code") != 0:
-        raise RuntimeError(f"Server error: {response.get('error')}")
-    return response.get("result")
 
 
 def run_actions(
@@ -228,11 +169,10 @@ def run_actions(
     dry_run: bool,
     reset_first: bool = True,
     reset_last: bool = False,
-    use_batch: bool = True,
 ) -> None:
     if reset_first:
         print("[INIT] reset all controlled motors to zero", flush=True)
-        send_commands(reset_commands(), host, port, timeout, dry_run, use_batch)
+        send_commands(reset_commands(), host, port, timeout, dry_run)
         time.sleep(0.1)
 
     for order, (action_name, duration_s) in enumerate(pairs, start=1):
@@ -244,13 +184,13 @@ def run_actions(
         else:
             commands = motion_to_robot_commands(get_merged_motion(action_name))
 
-        send_commands(commands, host, port, timeout, dry_run, use_batch)
+        send_commands(commands, host, port, timeout, dry_run)
         if duration_s > 0:
             time.sleep(duration_s)
 
     if reset_last and (not pairs or pairs[-1][0] != "standby"):
         print("[DONE] reset all controlled motors to zero", flush=True)
-        send_commands(reset_commands(), host, port, timeout, dry_run, use_batch)
+        send_commands(reset_commands(), host, port, timeout, dry_run)
 
 
 def read_text(input_file: str) -> str:
@@ -271,7 +211,6 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Parse and print without sending.")
     parser.add_argument("--no-reset-first", action="store_true", help="Do not reset before the sequence.")
     parser.add_argument("--reset-last", action="store_true", help="Force reset after the sequence.")
-    parser.add_argument("--no-batch", action="store_true", help="Use the older one-command-per-socket sender.")
     args = parser.parse_args()
 
     pairs = parse_action_pairs(read_text(args.input_file))
@@ -284,7 +223,6 @@ def main() -> int:
         dry_run=args.dry_run,
         reset_first=not args.no_reset_first,
         reset_last=args.reset_last,
-        use_batch=not args.no_batch,
     )
     print("Done.", flush=True)
     return 0

@@ -21,7 +21,7 @@ import json
 import math
 import socket
 import threading
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import rospy
 from hr_msgs.msg import TargetPosture
@@ -100,68 +100,18 @@ def clamp(actuator, value):
 
 
 def parse_scalar_command(request):
-    return parse_scalar_commands(request)[0]
-
-
-def parse_scalar_commands(request):
     if not isinstance(request, dict):
         raise ValueError("request must be a JSON object")
+    if "index" not in request or "value" not in request:
+        raise ValueError("request must include index and value")
 
-    if request.get("command") == "reset":
-        return [
-            (index, MOTOR_INDEX_TO_ACTUATOR[index], 0.0)
-            for index in sorted(MOTOR_INDEX_TO_ACTUATOR)
-        ]
-
-    commands = []
-    if isinstance(request.get("commands"), list):
-        for item in request["commands"]:
-            commands.append(parse_scalar_command_item(item))
-    elif isinstance(request.get("indices"), list) and isinstance(request.get("values"), list):
-        indices = request["indices"]
-        values = request["values"]
-        if len(indices) != len(values):
-            raise ValueError("indices and values must have the same length")
-        for index, value in zip(indices, values):
-            commands.append(parse_scalar_index_value(index, value))
-    elif "index" in request and "value" in request:
-        commands.append(parse_scalar_index_value(request["index"], request["value"]))
-    else:
-        raise ValueError(
-            "request must include index/value, commands, indices/values, or command='reset'"
-        )
-
-    if not commands:
-        raise ValueError("no scalar motor commands in request")
-
-    merged = {}
-    for index, actuator, value in commands:
-        merged[index] = (actuator, value)
-    return [
-        (index, actuator, value)
-        for index, (actuator, value) in sorted(merged.items())
-    ]
-
-
-def parse_scalar_command_item(item: Any):
-    if isinstance(item, dict):
-        if "index" not in item or "value" not in item:
-            raise ValueError("each command object must include index and value")
-        return parse_scalar_index_value(item["index"], item["value"])
-
-    if isinstance(item, (list, tuple)) and len(item) >= 2:
-        return parse_scalar_index_value(item[0], item[1])
-
-    raise ValueError("each command must be an object or [index, value] pair")
-
-
-def parse_scalar_index_value(raw_index, raw_value):
-    index = int(raw_index)
+    index = int(request["index"])
     if index not in MOTOR_INDEX_TO_ACTUATOR:
         raise ValueError("unknown motor index: %s" % index)
 
-    if isinstance(raw_value, (dict, list, tuple)):
-        raise ValueError("value must be one scalar radian number, not a vector/list/object")
+    raw_value = request["value"]
+    if isinstance(raw_value, (list, tuple)):
+        raise ValueError("value must be one scalar radian number, not a vector/list")
 
     actuator = MOTOR_INDEX_TO_ACTUATOR[index]
     value = clamp(actuator, float(raw_value))
@@ -232,25 +182,14 @@ class ScalarIndexBodyBridgeServer:
 
     def _handle(self, conn, addr):
         try:
-            raw = conn.recv(65536)
+            raw = conn.recv(4096)
             if not raw:
                 return
 
             request = json.loads(raw.decode("utf-8"))
-            commands = parse_scalar_commands(request)
-            names = [actuator for _, actuator, _ in commands]
-            values = [value for _, _, value in commands]
-            indices = [index for index, _, _ in commands]
-            self._publish(names, values)
-            self._send(
-                conn,
-                code=0,
-                result={
-                    "count": len(commands),
-                    "indices": indices,
-                    "sent": dict(zip(names, values)),
-                },
-            )
+            index, actuator, value = parse_scalar_command(request)
+            self._publish([actuator], [value])
+            self._send(conn, code=0, result={"index": index, "sent": {actuator: value}})
         except Exception as exc:
             self._send(conn, code=99, error=str(exc))
         finally:

@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from motion_repo import MOTIONS, compact_motion_catalog_text, motion_catalog_text
+from motion_repo import MOTIONS, motion_catalog_text
 
 
 DEFAULT_CANDIDATE_COUNT = int(os.getenv("SOPHIA_NONVERBAL_CANDIDATES", "5"))
@@ -151,52 +151,6 @@ Output JSON only in this exact shape:
     }}
   ]
 }}
-"""
-
-
-def build_direct_prompt(spoken_text: str, speech_duration_sec: float) -> str:
-    motion_target = target_motion_duration(speech_duration_sec)
-    return f"""You are Sophia's fast nonverbal motion agent.
-Choose the best short upper-body motion sequence for what Sophia is about to say.
-
-Spoken text:
-{spoken_text}
-
-Speech duration: {speech_duration_sec:.2f} seconds
-Target total motion duration: about {motion_target:.2f} seconds
-
-Allowed atomic keyframes:
-{compact_motion_catalog_text()}
-
-Rules:
-- Internally consider a few options, then output only the final best sequence.
-- Use only listed keyframes.
-- Read each keyframe as a physical pose. Build meaning by composing atoms.
-- Use A+B for simultaneous compatible poses, for example leftHandRaise+rightHandRaise.
-- Use 2-4 action lines for short speech and 3-6 for longer speech.
-- Always end with standby unless holding is clearly intended.
-- Durations should usually be 0.2 to 1.2 seconds per action.
-- Do not output JSON, markdown, comments, or explanations.
-
-Examples:
-Hello, nice to meet you.
-rightHandRaise 0.50
-rightHandWaveLeft 0.35
-rightHandWaveRight 0.35
-standby 0.60
-
-Let me explain how this works.
-leftHandReachOut+rightHandReachOut 0.75
-leftForearmLiftSmall+rightForearmLiftSmall 0.40
-leftForearmLowerSmall+rightForearmLowerSmall 0.40
-standby 0.60
-
-Please put both hands up.
-leftHandRaise+rightHandRaise 0.80
-standby 0.60
-
-Final output format:
-<action_name> <duration>
 """
 
 

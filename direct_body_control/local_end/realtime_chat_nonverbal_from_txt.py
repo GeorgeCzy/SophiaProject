@@ -15,7 +15,6 @@ from urllib.parse import parse_qs, quote, urlparse
 from nonverbal_motion_agent import (
     MotionRequest,
     build_candidate_prompt,
-    build_direct_prompt,
     build_judge_prompt,
     effective_speech_duration,
     normalize_action_output,
@@ -128,7 +127,7 @@ else:
         CONFIG_SOURCE = "settings.py"
 
 URL = CONFIG.realtime_url
-LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "0").strip().lower() in {"1", "true", "yes"}
+LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"1", "true", "yes"}
 INPUT_PATH = Path(
     os.getenv(
         "SOPHIA_NONVERBAL_INPUT_FILE",
@@ -151,21 +150,8 @@ APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip()
     "on",
 }
 MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "scalar_index").strip().lower()
-MOTION_AGENT_MODE = os.getenv("SOPHIA_NONVERBAL_AGENT_MODE", "fast").strip().lower()
 SCALAR_ROBOT_HOST = os.getenv("SOPHIA_SCALAR_ROBOT_HOST", "10.0.0.10")
 SCALAR_ROBOT_PORT = int(os.getenv("SOPHIA_SCALAR_ROBOT_PORT", "5005"))
-SCALAR_RESET_FIRST = os.getenv("SOPHIA_SCALAR_RESET_FIRST", "0").strip().lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
-SCALAR_BATCH_COMMANDS = os.getenv("SOPHIA_SCALAR_BATCH_COMMANDS", "1").strip().lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
 STANDARD_ROBOT_HOST = os.getenv("SOPHIA_STANDARD_ROBOT_HOST", "10.0.0.10")
 STANDARD_ROBOT_PORT = int(os.getenv("SOPHIA_STANDARD_ROBOT_PORT", "5005"))
 DIRECT_ROBOT_HOST = os.getenv("SOPHIA_DIRECT_ROBOT_HOST", "10.0.0.10")
@@ -278,14 +264,9 @@ def start_motion_turn(ws, raw_text: str, duration_hint: float | None = None):
     duration = effective_speech_duration(request)
     current_request = MotionRequest(request.spoken_text, duration)
     candidate_output = ""
-    if MOTION_AGENT_MODE in {"two_stage", "planner_judge", "planner+judge"}:
-        agent_stage = "candidates"
-        prompt = build_candidate_prompt(request.spoken_text, duration)
-        print(f"[Agent] two-stage planning for {duration:.2f}s spoken text", flush=True)
-    else:
-        agent_stage = "direct"
-        prompt = build_direct_prompt(request.spoken_text, duration)
-        print(f"[Agent] fast planning for {duration:.2f}s spoken text", flush=True)
+    agent_stage = "candidates"
+    prompt = build_candidate_prompt(request.spoken_text, duration)
+    print(f"[Agent] planning for {duration:.2f}s spoken text", flush=True)
     send_text_message(ws, prompt)
 
 
@@ -355,10 +336,6 @@ def run_move_sender():
             "--port",
             str(SCALAR_ROBOT_PORT),
         ]
-        if not SCALAR_RESET_FIRST:
-            sender_cmd.append("--no-reset-first")
-        if not SCALAR_BATCH_COMMANDS:
-            sender_cmd.append("--no-batch")
         sender_name = "llm_move_sender.py"
     elif MOTION_SENDER in {"standard", "standard_index"}:
         sender_cmd = [
@@ -795,11 +772,8 @@ if __name__ == "__main__":
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
-    print(f"MOTION_AGENT_MODE = {MOTION_AGENT_MODE}")
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
         print(f"SCALAR_ROBOT = {SCALAR_ROBOT_HOST}:{SCALAR_ROBOT_PORT}")
-        print(f"SCALAR_RESET_FIRST = {SCALAR_RESET_FIRST}")
-        print(f"SCALAR_BATCH_COMMANDS = {SCALAR_BATCH_COMMANDS}")
     elif MOTION_SENDER in {"standard", "standard_index"}:
         print(f"STANDARD_ROBOT = {STANDARD_ROBOT_HOST}:{STANDARD_ROBOT_PORT}")
     elif MOTION_SENDER == "direct":

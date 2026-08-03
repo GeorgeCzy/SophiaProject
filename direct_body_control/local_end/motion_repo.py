@@ -274,17 +274,6 @@ def motion_catalog_text() -> str:
     return "\n".join(lines)
 
 
-def compact_motion_catalog_text() -> str:
-    """Return a shorter keyframe catalog for low-latency prompting."""
-    lines = []
-    for name in MOTIONS:
-        meta = MOTION_DESCRIPTIONS.get(name, {})
-        category = meta.get("category", "uncategorized")
-        description = meta.get("description", "No description available.")
-        lines.append(f"- {name} [{category}]: {description}")
-    return "\n".join(lines)
-
-
 # ---------------------------------------------------------------------------
 # Motion presets (degrees). Only specify joints that differ from 0.
 # ---------------------------------------------------------------------------
