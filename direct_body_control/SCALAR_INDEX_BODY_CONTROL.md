@@ -6,7 +6,9 @@ This is the simplified replacement for:
 bodycontrol_tcp_standard.py + realtime_chat_nonverbal_from_txt.py
 ```
 
-The local TCP client stays unchanged: `Sophia_control.py`.
+The old single-motor TCP client stays compatible: `Sophia_control.py`.
+For lower latency, `llm_move_sender.py` now sends one whole keyframe as a batch
+TCP request by default.
 
 ## Protocol
 
@@ -23,6 +25,14 @@ one index -> one motor -> one scalar radian value
 ```
 
 No `[x, y, z]`, no axis-angle, no SMPL-X mapping.
+
+The same robot bridge also accepts batch keyframe commands:
+
+```json
+{"unit":"rad","commands":[{"index":0,"value":-1.2217},{"index":3,"value":1.8849}]}
+```
+
+All commands in the batch are published together in one ROS posture message.
 
 ## Robot End
 
@@ -89,11 +99,32 @@ actions.txt
 
 Run:
 
-```powershell
-$env:SOPHIA_MOTION_SENDER="scalar_index"
-$env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
-$env:SOPHIA_SCALAR_ROBOT_PORT="5005"
+```bash
+export SOPHIA_MOTION_SENDER=scalar_index
+export SOPHIA_SCALAR_ROBOT_HOST=10.0.0.10
+export SOPHIA_SCALAR_ROBOT_PORT=5005
 python realtime_chat_nonverbal_from_txt.py
+```
+
+Fast defaults:
+
+```text
+SOPHIA_NONVERBAL_AGENT_MODE=fast
+SOPHIA_SCALAR_RESET_FIRST=0
+SOPHIA_SCALAR_BATCH_COMMANDS=1
+REALTIME_LOG_ALL_EVENTS=0
+```
+
+Use the old slower planner plus judge flow only for comparison:
+
+```bash
+SOPHIA_NONVERBAL_AGENT_MODE=two_stage python realtime_chat_nonverbal_from_txt.py
+```
+
+Disable batch only when testing against an old robot bridge:
+
+```bash
+SOPHIA_SCALAR_BATCH_COMMANDS=0 python realtime_chat_nonverbal_from_txt.py
 ```
 
 By default, `realtime_chat_nonverbal_from_txt.py` watches `input.txt` in the
@@ -138,11 +169,18 @@ python main.py
 Dry-run without robot:
 
 ```powershell
-python llm_move_sender.py --input-file actions.txt --dry-run
+python llm_move_sender.py --input-file actions.txt --dry-run --no-reset-first
 ```
 
 ## Important Note About Simultaneous Motion
 
-Keeping `Sophia_control.py` unchanged means it sends one motor per TCP request.
-That is simpler and matches the old local interface, but true same-packet batch
-movement would require changing `Sophia_control.py`.
+Use `+` to merge atomic keyframes:
+
+```text
+leftHandRaise+rightHandRaise 0.8
+standby 0.6
+```
+
+`llm_move_sender.py` sends each merged keyframe in one TCP request, and
+`bodycontrol_tcp_scalar_index.py` publishes all included motors together. The
+old one-index/one-value request is still accepted for manual tests.

@@ -12,10 +12,12 @@ motion_repo keyframe -> SMPL/index mapping -> axis-angle [x,y,z] -> bodycontrol_
 Recommended path:
 
 ```text
-motion_repo keyframe -> scalar motor index + radian value -> Sophia_control.py -> bodycontrol_tcp_scalar_index.py
+motion_repo keyframe -> scalar motor index + radian value -> batch TCP -> bodycontrol_tcp_scalar_index.py
 ```
 
-The local TCP client remains `Sophia_control.py`.
+The old single-motor `Sophia_control.py` request still works for manual tests.
+The motion sender now uses a batch request by default so one keyframe reaches
+the robot as one TCP message.
 
 ## Robot End
 
@@ -37,7 +39,15 @@ The robot bridge accepts:
 {"index":0,"value":-1.2217}
 ```
 
-and sends that scalar radian value to one actuator.
+and sends that scalar radian value to one actuator. It also accepts batch
+commands:
+
+```json
+{"unit":"rad","commands":[{"index":0,"value":-1.2217},{"index":3,"value":1.8849}]}
+```
+
+Batch commands are published in one `/hr/actuators/pose` message, so left/right
+compound actions can start together.
 
 If Sophia's official motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` in
 both `robot_end/bodycontrol_tcp_scalar_index.py` and `local_end/llm_move_sender.py`.
@@ -106,6 +116,28 @@ $env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
 ```
 
+Low-latency defaults are already enabled:
+
+```text
+SOPHIA_NONVERBAL_AGENT_MODE=fast
+SOPHIA_SCALAR_RESET_FIRST=0
+SOPHIA_SCALAR_BATCH_COMMANDS=1
+REALTIME_LOG_ALL_EVENTS=0
+```
+
+The fast mode uses one LLM response. To compare with the older planner plus
+judge flow:
+
+```bash
+SOPHIA_NONVERBAL_AGENT_MODE=two_stage python realtime_chat_nonverbal_from_txt.py
+```
+
+To debug against an older robot bridge without batch support:
+
+```bash
+SOPHIA_SCALAR_BATCH_COMMANDS=0 python realtime_chat_nonverbal_from_txt.py
+```
+
 By default, `realtime_chat_nonverbal_from_txt.py` watches `input.txt` in the
 same folder. Edit or overwrite that file to trigger the planner and judge
 agents:
@@ -148,7 +180,7 @@ python main.py
 Dry run:
 
 ```powershell
-python llm_move_sender.py --input-file actions.txt --dry-run
+python llm_move_sender.py --input-file actions.txt --dry-run --no-reset-first
 ```
 
 Quick robot test:
@@ -166,9 +198,9 @@ leftHandReachOut+rightHandReachOut 0.8
 standby 0.6
 ```
 
-Because `Sophia_control.py` is unchanged, `llm_move_sender.py` sends those
-motors one by one very quickly. True same-packet batch movement would require
-changing `Sophia_control.py`.
+`llm_move_sender.py` sends each compound keyframe as one batch TCP request. If
+the robot bridge is old and rejects batch format, it automatically falls back
+to the older one-command-per-socket behavior.
 
 ## Comparison Paths
 
