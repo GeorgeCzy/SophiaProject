@@ -158,6 +158,24 @@ DIRECT_ROBOT_HOST = os.getenv("SOPHIA_DIRECT_ROBOT_HOST", "10.0.0.10")
 DIRECT_ROBOT_PORT = int(os.getenv("SOPHIA_DIRECT_ROBOT_PORT", "5006"))
 LEGACY_ROBOT_HOST = os.getenv("SOPHIA_LEGACY_ROBOT_HOST", "10.0.0.10")
 LEGACY_ROBOT_PORT = int(os.getenv("SOPHIA_LEGACY_ROBOT_PORT", "5005"))
+LATENCY_PROFILING = os.getenv("SOPHIA_NONVERBAL_LATENCY", "1").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+LATENCY_LOG_PATH = Path(
+    os.getenv(
+        "SOPHIA_NONVERBAL_LATENCY_LOG",
+        str(Path(BASE_DIR) / "motion_latency_log.json"),
+    )
+)
+LATENCY_REPORT_PATH = Path(
+    os.getenv(
+        "SOPHIA_NONVERBAL_LATENCY_REPORT",
+        str(Path(BASE_DIR) / "motion_latency_report.txt"),
+    )
+)
 
 HEADERS = [
     "Authorization: Bearer " + CONFIG.api_key,
@@ -172,6 +190,7 @@ response_active = False
 agent_stage = "idle"
 current_request: MotionRequest | None = None
 candidate_output = ""
+current_latency: dict = {}
 
 
 def load_prompt(path: str) -> str:
@@ -182,6 +201,126 @@ def load_prompt(path: str) -> str:
 
 
 SYS_PROMPT = load_prompt(PROMPT_PATH)
+
+
+def latency_mark(name: str) -> None:
+    if LATENCY_PROFILING:
+        current_latency[name] = time.perf_counter()
+
+
+def latency_elapsed(start_name: str, end_name: str) -> float | None:
+    start = current_latency.get(start_name)
+    end = current_latency.get(end_name)
+    if isinstance(start, (int, float)) and isinstance(end, (int, float)):
+        return max(0.0, end - start)
+    return None
+
+
+def print_latency(label: str, start_name: str, end_name: str) -> None:
+    return
+
+
+def print_latency_summary() -> None:
+    return
+
+
+def latency_metrics() -> dict[str, float]:
+    pairs = [
+        ("extract_latest_conversation", "source_read_start", "source_read_done"),
+        ("source_to_candidate_prompt_sent", "source_read_done", "candidate_prompt_sent"),
+        ("candidate_first_token", "candidate_prompt_sent", "candidate_first_delta"),
+        ("candidate_complete", "candidate_prompt_sent", "candidate_response_done"),
+        ("judge_first_token", "judge_prompt_sent", "judge_first_delta"),
+        ("judge_complete", "judge_prompt_sent", "judge_response_done"),
+        ("normalize_output", "normalize_start", "normalize_done"),
+        ("write_actions_file", "write_actions_start", "write_actions_done"),
+        ("motion_sender_subprocess", "motion_sender_start", "motion_sender_done"),
+        ("total_until_actions_ready", "turn_start", "write_actions_done"),
+        ("total_until_sender_done", "turn_start", "motion_sender_done"),
+    ]
+    metrics: dict[str, float] = {}
+    for name, start_name, end_name in pairs:
+        elapsed = latency_elapsed(start_name, end_name)
+        if elapsed is not None:
+            metrics[name] = elapsed
+    return metrics
+
+
+def write_latency_record() -> None:
+    if not LATENCY_PROFILING or not current_latency:
+        return
+
+    record = {
+        "time": datetime.now().isoformat(timespec="milliseconds"),
+        "turn_id": current_latency.get("turn_id"),
+        "spoken_text": current_latency.get("spoken_text"),
+        "spoken_chars": current_latency.get("spoken_chars"),
+        "speech_duration_sec": current_latency.get("speech_duration_sec"),
+        "motion_source": current_latency.get("motion_source"),
+        "motion_source_path": current_latency.get("motion_source_path"),
+        "candidate_prompt_chars": current_latency.get("candidate_prompt_chars"),
+        "judge_prompt_chars": current_latency.get("judge_prompt_chars"),
+        "candidate_output_chars": current_latency.get("candidate_output_chars"),
+        "judge_output_chars": current_latency.get("judge_output_chars"),
+        "metrics_sec": latency_metrics(),
+    }
+    try:
+        LATENCY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        append_latency_json(record)
+        append_latency_report(record)
+    except Exception as exc:
+        print(f"[Latency] failed to write {LATENCY_LOG_PATH}: {exc}", flush=True)
+
+
+def append_latency_json(record: dict) -> None:
+    if LATENCY_LOG_PATH.exists():
+        try:
+            existing = json.loads(LATENCY_LOG_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            existing = []
+        if not isinstance(existing, list):
+            existing = [existing]
+    else:
+        existing = []
+
+    existing.append(record)
+    LATENCY_LOG_PATH.write_text(
+        json.dumps(existing, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def append_latency_report(record: dict) -> None:
+    metrics = record.get("metrics_sec") or {}
+    LATENCY_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    lines = [
+        "",
+        "=" * 72,
+        f"Turn {record.get('turn_id')} | {record.get('time')}",
+        "-" * 72,
+        f"source: {record.get('motion_source') or ''}",
+        f"source_path: {record.get('motion_source_path') or ''}",
+        f"spoken_chars: {record.get('spoken_chars')}",
+        f"speech_duration_sec: {record.get('speech_duration_sec')}",
+        f"candidate_prompt_chars: {record.get('candidate_prompt_chars')}",
+        f"candidate_output_chars: {record.get('candidate_output_chars')}",
+        f"judge_prompt_chars: {record.get('judge_prompt_chars')}",
+        f"judge_output_chars: {record.get('judge_output_chars')}",
+        "",
+        "spoken_text:",
+        str(record.get("spoken_text") or ""),
+        "",
+        "latency_sec:",
+    ]
+    if metrics:
+        for name, seconds in metrics.items():
+            lines.append(f"  {name}: {float(seconds):.3f}")
+    else:
+        lines.append("  <no latency metrics recorded>")
+
+    with LATENCY_REPORT_PATH.open("a", encoding="utf-8") as file:
+        file.write("\n".join(lines) + "\n")
 
 
 def _model_name_from_url(url: str) -> str:
@@ -251,8 +390,13 @@ def read_duration_hint() -> float | None:
     return duration if duration > 0 else None
 
 
-def start_motion_turn(ws, raw_text: str, duration_hint: float | None = None):
-    global agent_stage, current_request, candidate_output
+def start_motion_turn(
+    ws,
+    raw_text: str,
+    duration_hint: float | None = None,
+    source_latency: dict | None = None,
+):
+    global agent_stage, current_request, candidate_output, current_latency
     request = parse_motion_request(raw_text)
     if not request.spoken_text:
         print("Empty motion request; ignoring.", flush=True)
@@ -264,10 +408,27 @@ def start_motion_turn(ws, raw_text: str, duration_hint: float | None = None):
     duration = effective_speech_duration(request)
     current_request = MotionRequest(request.spoken_text, duration)
     candidate_output = ""
+    current_latency = {
+        "turn_id": datetime.now().strftime("%Y%m%d-%H%M%S-%f"),
+        "spoken_text": request.spoken_text,
+        "spoken_chars": len(request.spoken_text),
+        "speech_duration_sec": duration,
+    }
+    if source_latency:
+        current_latency.update(source_latency)
+        print_latency("extract latest conversation", "source_read_start", "source_read_done")
+    latency_mark("turn_start")
     agent_stage = "candidates"
+    latency_mark("candidate_prompt_build_start")
     prompt = build_candidate_prompt(request.spoken_text, duration)
+    current_latency["candidate_prompt_chars"] = len(prompt)
+    latency_mark("candidate_prompt_built")
     print(f"[Agent] planning for {duration:.2f}s spoken text", flush=True)
+    print_latency("candidate prompt build", "candidate_prompt_build_start", "candidate_prompt_built")
+    latency_mark("candidate_prompt_send_start")
     send_text_message(ws, prompt)
+    latency_mark("candidate_prompt_sent")
+    print_latency("candidate prompt send", "candidate_prompt_send_start", "candidate_prompt_sent")
 
 
 def finalize_response_text(text: str) -> str:
@@ -402,12 +563,25 @@ def run_move_sender():
 
 
 def handle_output(output_text: str, speech_duration_sec: float | None):
+    latency_mark("normalize_start")
     normalized = normalize_action_output(output_text, speech_duration_sec)
+    latency_mark("normalize_done")
+    print_latency("normalize output", "normalize_start", "normalize_done")
     if normalized != output_text.strip():
         print("Normalized model output to valid action pairs.", flush=True)
         print(normalized, flush=True)
+    latency_mark("write_actions_start")
     write_actions_file(normalized)
+    latency_mark("write_actions_done")
+    print_latency("write actions file", "write_actions_start", "write_actions_done")
+    latency_mark("motion_sender_start")
     run_move_sender()
+    latency_mark("motion_sender_done")
+    print_latency(
+        "motion sender subprocess (includes action hold time)",
+        "motion_sender_start",
+        "motion_sender_done",
+    )
 
 
 def _text_from_content(value) -> str:
@@ -574,7 +748,14 @@ def file_input_loop(ws):
         response_done.wait()
 
         try:
+            source_latency = {"source_read_start": time.perf_counter()}
             content, signature = read_motion_source()
+            source_latency["source_read_done"] = time.perf_counter()
+            source_latency["motion_source"] = signature[0] if signature else "unknown"
+            if len(signature) > 1 and isinstance(signature[1], str):
+                source_latency["motion_source_path"] = signature[1]
+            elif signature and signature[0] == "input":
+                source_latency["motion_source_path"] = str(INPUT_PATH)
             missing_reported = False
         except FileNotFoundError as e:
             if not missing_reported:
@@ -613,7 +794,12 @@ def file_input_loop(ws):
         response_chunks.clear()
 
         try:
-            start_motion_turn(ws, content, duration_hint=duration_hint)
+            start_motion_turn(
+                ws,
+                content,
+                duration_hint=duration_hint,
+                source_latency=source_latency,
+            )
             last_sent_signature = signature
             print("Sent spoken answer to realtime motion agent.", flush=True)
         except Exception as e:
@@ -661,6 +847,12 @@ def on_message(ws, message):
         response_active = True
         delta = data.get("delta", "")
         response_chunks.append(delta)
+        if agent_stage == "candidates" and "candidate_first_delta" not in current_latency:
+            latency_mark("candidate_first_delta")
+            print_latency("candidate first token", "candidate_prompt_sent", "candidate_first_delta")
+        elif agent_stage == "judge" and "judge_first_delta" not in current_latency:
+            latency_mark("judge_first_delta")
+            print_latency("judge first token", "judge_prompt_sent", "judge_first_delta")
 
     elif t == "response.done":
         response_active = False
@@ -671,22 +863,37 @@ def on_message(ws, message):
         response_chunks.clear()
 
         if agent_stage == "candidates" and current_request is not None:
+            latency_mark("candidate_response_done")
+            current_latency["candidate_output_chars"] = len(output_text)
+            print_latency("candidate complete", "candidate_prompt_sent", "candidate_response_done")
             candidate_output = output_text
             print("[Agent] planner candidates:", flush=True)
             print(candidate_output, flush=True)
             agent_stage = "judge"
+            latency_mark("judge_prompt_build_start")
             judge_prompt = build_judge_prompt(
                 current_request.spoken_text,
                 effective_speech_duration(current_request),
                 candidate_output,
             )
+            current_latency["judge_prompt_chars"] = len(judge_prompt)
+            latency_mark("judge_prompt_built")
+            print_latency("judge prompt build", "judge_prompt_build_start", "judge_prompt_built")
             try:
+                latency_mark("judge_prompt_send_start")
                 send_text_message(ws, judge_prompt)
+                latency_mark("judge_prompt_sent")
+                print_latency("judge prompt send", "judge_prompt_send_start", "judge_prompt_sent")
             except Exception as e:
                 print(f"\nJudge send failed: {e}\n", flush=True)
                 agent_stage = "idle"
                 response_done.set()
             return
+
+        if agent_stage == "judge":
+            latency_mark("judge_response_done")
+            current_latency["judge_output_chars"] = len(output_text)
+            print_latency("judge complete", "judge_prompt_sent", "judge_response_done")
 
         print("[Agent] selected motion:", flush=True)
         print(output_text, flush=True)
@@ -694,6 +901,9 @@ def on_message(ws, message):
             print("Realtime returned an empty text response; actions.txt will use fallback motion.", flush=True)
         speech_duration = current_request.speech_duration_sec if current_request else None
         handle_output(output_text, speech_duration)
+        latency_mark("turn_done")
+        print_latency_summary()
+        write_latency_record()
         agent_stage = "idle"
         current_request = None
         candidate_output = ""
