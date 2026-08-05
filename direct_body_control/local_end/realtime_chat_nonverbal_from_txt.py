@@ -128,6 +128,15 @@ else:
 
 URL = CONFIG.realtime_url
 LOG_ALL_EVENTS = os.getenv("REALTIME_LOG_ALL_EVENTS", "1").strip().lower() in {"1", "true", "yes"}
+
+
+def env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
 INPUT_PATH = Path(
     os.getenv(
         "SOPHIA_NONVERBAL_INPUT_FILE",
@@ -150,6 +159,7 @@ APPEND_RANDOM_GESTURE = os.getenv("SOPHIA_NONVERBAL_APPEND_RANDOM", "0").strip()
     "on",
 }
 MOTION_SENDER = os.getenv("SOPHIA_MOTION_SENDER", "scalar_index").strip().lower()
+MOTION_DURATION_SCALE = env_float("SOPHIA_MOTION_DURATION_SCALE", 1.25)
 SCALAR_ROBOT_HOST = os.getenv("SOPHIA_SCALAR_ROBOT_HOST", "10.0.0.10")
 SCALAR_ROBOT_PORT = int(os.getenv("SOPHIA_SCALAR_ROBOT_PORT", "5005"))
 STANDARD_ROBOT_HOST = os.getenv("SOPHIA_STANDARD_ROBOT_HOST", "10.0.0.10")
@@ -496,6 +506,8 @@ def run_move_sender():
             SCALAR_ROBOT_HOST,
             "--port",
             str(SCALAR_ROBOT_PORT),
+            "--duration-scale",
+            str(MOTION_DURATION_SCALE),
         ]
         sender_name = "llm_move_sender.py"
     elif MOTION_SENDER in {"standard", "standard_index"}:
@@ -532,6 +544,8 @@ def run_move_sender():
             LEGACY_ROBOT_HOST,
             "--port",
             str(LEGACY_ROBOT_PORT),
+            "--duration-scale",
+            str(MOTION_DURATION_SCALE),
         ]
         sender_name = "llm_move_sender.py"
     else:
@@ -982,6 +996,7 @@ if __name__ == "__main__":
     print(f"DURATION = {DURATION_PATH}")
     print(f"APPEND_RANDOM_GESTURE = {APPEND_RANDOM_GESTURE}")
     print(f"MOTION_SENDER = {MOTION_SENDER}")
+    print(f"MOTION_DURATION_SCALE = {MOTION_DURATION_SCALE}")
     if MOTION_SENDER in {"scalar", "scalar_index", "motor_index", "index"}:
         print(f"SCALAR_ROBOT = {SCALAR_ROBOT_HOST}:{SCALAR_ROBOT_PORT}")
     elif MOTION_SENDER in {"standard", "standard_index"}:

@@ -13,6 +13,7 @@ There is no SMPL-X mapping and no axis-angle/vector conversion here.
 import argparse
 import json
 import math
+import os
 import re
 import sys
 import time
@@ -29,6 +30,16 @@ ACTUATOR_TO_MOTOR_INDEX: Dict[str, int] = {
     actuator: index for index, actuator in MOTOR_INDEX_TO_ACTUATOR.items()
 }
 ALL_INDICES = sorted(MOTOR_INDEX_TO_ACTUATOR)
+
+
+def env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
+DEFAULT_DURATION_SCALE = env_float("SOPHIA_MOTION_DURATION_SCALE", 1.25)
 
 
 def deg2rad(deg: float) -> float:
@@ -169,14 +180,26 @@ def run_actions(
     dry_run: bool,
     reset_first: bool = True,
     reset_last: bool = False,
+    duration_scale: float = 1.0,
 ) -> None:
+    if duration_scale <= 0:
+        raise ValueError("duration_scale must be > 0")
+
     if reset_first:
         print("[INIT] reset all controlled motors to zero", flush=True)
         send_commands(reset_commands(), host, port, timeout, dry_run)
         time.sleep(0.1)
 
     for order, (action_name, duration_s) in enumerate(pairs, start=1):
-        print(f"[{order}/{len(pairs)}] {action_name}: hold {duration_s:.3f}s", flush=True)
+        hold_s = duration_s * duration_scale
+        if duration_scale == 1.0:
+            print(f"[{order}/{len(pairs)}] {action_name}: hold {duration_s:.3f}s", flush=True)
+        else:
+            print(
+                f"[{order}/{len(pairs)}] {action_name}: hold {duration_s:.3f}s "
+                f"-> {hold_s:.3f}s",
+                flush=True,
+            )
         if action_name == "stay":
             commands = []
         elif action_name == "standby":
@@ -185,8 +208,8 @@ def run_actions(
             commands = motion_to_robot_commands(get_merged_motion(action_name))
 
         send_commands(commands, host, port, timeout, dry_run)
-        if duration_s > 0:
-            time.sleep(duration_s)
+        if hold_s > 0:
+            time.sleep(hold_s)
 
     if reset_last and (not pairs or pairs[-1][0] != "standby"):
         print("[DONE] reset all controlled motors to zero", flush=True)
@@ -211,6 +234,12 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Parse and print without sending.")
     parser.add_argument("--no-reset-first", action="store_true", help="Do not reset before the sequence.")
     parser.add_argument("--reset-last", action="store_true", help="Force reset after the sequence.")
+    parser.add_argument(
+        "--duration-scale",
+        type=float,
+        default=DEFAULT_DURATION_SCALE,
+        help="Multiply every action hold duration. Default: SOPHIA_MOTION_DURATION_SCALE or 1.25.",
+    )
     args = parser.parse_args()
 
     pairs = parse_action_pairs(read_text(args.input_file))
@@ -223,6 +252,7 @@ def main() -> int:
         dry_run=args.dry_run,
         reset_first=not args.no_reset_first,
         reset_last=args.reset_last,
+        duration_scale=args.duration_scale,
     )
     print("Done.", flush=True)
     return 0

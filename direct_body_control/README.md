@@ -106,6 +106,15 @@ $env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
 ```
 
+Motion hold durations are scaled by `1.25` by default, so the robot does not
+rush between poses. Tune this on the local end if needed:
+
+```bash
+export SOPHIA_MOTION_DURATION_SCALE=1.0   # original timing
+export SOPHIA_MOTION_DURATION_SCALE=1.5   # slower, longer holds
+python realtime_chat_nonverbal_from_txt.py
+```
+
 By default, `realtime_chat_nonverbal_from_txt.py` watches `input.txt` in the
 same folder. Edit or overwrite that file to trigger the planner and judge
 agents:
@@ -148,7 +157,7 @@ python main.py
 Dry run:
 
 ```powershell
-python llm_move_sender.py --input-file actions.txt --dry-run
+python llm_move_sender.py --input-file actions.txt --dry-run --duration-scale 1.25
 ```
 
 Quick robot test:
