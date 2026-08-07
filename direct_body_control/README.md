@@ -86,6 +86,7 @@ Use these files locally, in the same folder:
 
 ```text
 local_end/realtime_chat_nonverbal_from_txt.py
+local_end/deepseek_chat_nonverbal_from_txt.py
 local_end/nonverbal_motion_agent.py
 local_end/system_prompt.txt
 local_end/motion_repo.py
@@ -96,14 +97,55 @@ local_end/input.txt
 local_end/actions.txt
 ```
 
-For the full speech + motion loop, place/copy the local-end files into the
-same folder that contains `Sophia_Face_HCI/`, then run:
+The default planner now generates `3` candidates instead of `5` to reduce
+latency. You can still override this for experiments:
+
+```bash
+export SOPHIA_NONVERBAL_CANDIDATES=5
+```
+
+### GPT Realtime Version
+
+The original GPT realtime pipeline is still:
 
 ```powershell
 $env:SOPHIA_MOTION_SENDER="scalar_index"
 $env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
 $env:SOPHIA_SCALAR_ROBOT_PORT="5005"
 python realtime_chat_nonverbal_from_txt.py
+```
+
+### DeepSeek Version
+
+The DeepSeek path is separate, so the GPT realtime script is not mixed with the
+DeepSeek API code. Fill `DEFAULT_DEEPSEEK_API_KEY = ""` inside
+`deepseek_chat_nonverbal_from_txt.py`, or put this in `.env` beside the script:
+
+```bash
+DEEPSEEK_API_KEY=your_key_here
+```
+
+Then run the DeepSeek motion agent:
+
+```powershell
+$env:SOPHIA_MOTION_SENDER="scalar_index"
+$env:SOPHIA_SCALAR_ROBOT_HOST="10.0.0.10"
+$env:SOPHIA_SCALAR_ROBOT_PORT="5005"
+python deepseek_chat_nonverbal_from_txt.py
+```
+
+Quick DeepSeek checks:
+
+```powershell
+python deepseek_chat_nonverbal_from_txt.py --once --dry-run
+python deepseek_chat_nonverbal_from_txt.py --once --no-send
+```
+
+The DeepSeek version writes latency files separately:
+
+```text
+motion_latency_deepseek_log.json
+motion_latency_deepseek_report.txt
 ```
 
 Motion hold durations are scaled by `1.25` by default, so the robot does not

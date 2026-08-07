@@ -9,7 +9,7 @@ from typing import Any
 from motion_repo import MOTIONS, motion_catalog_text
 
 
-DEFAULT_CANDIDATE_COUNT = int(os.getenv("SOPHIA_NONVERBAL_CANDIDATES", "5"))
+DEFAULT_CANDIDATE_COUNT = int(os.getenv("SOPHIA_NONVERBAL_CANDIDATES", "3"))
 MIN_ACTION_DURATION_SEC = 0.2
 MAX_ACTION_DURATION_SEC = 1.6
 DEFAULT_STANDBY_SEC = 0.6

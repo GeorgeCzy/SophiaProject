@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 sync_password.txt
+.env
+motion_latency*.json
+motion_latency*.txt
