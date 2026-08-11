@@ -148,6 +148,7 @@ if CHAT_HISTORY_ENV:
     CHAT_HISTORY_PATHS = [Path(CHAT_HISTORY_ENV)]
 else:
     CHAT_HISTORY_PATHS = [
+        Path(BASE_DIR).parent / "memory_supervisor" / "memory_sessions.jsonl",
         Path(BASE_DIR).parent / "chat_history.json",
         Path(BASE_DIR).parent / "chat_history.jsonl",
     ]
@@ -605,7 +606,18 @@ def _text_from_content(value) -> str:
         parts = [_text_from_content(item) for item in value]
         return " ".join(part for part in parts if part).strip()
     if isinstance(value, dict):
-        for key in ("text", "message", "content", "answer", "response", "utterance"):
+        for key in (
+            "text",
+            "message",
+            "content",
+            "answer",
+            "response",
+            "utterance",
+            "output_text",
+            "final_answer",
+            "value",
+            "parts",
+        ):
             text = _text_from_content(value.get(key))
             if text:
                 return text
@@ -613,7 +625,7 @@ def _text_from_content(value) -> str:
 
 
 def _role_from_item(item: dict) -> str:
-    for key in ("role", "speaker", "sender", "author", "from"):
+    for key in ("role", "speaker", "sender", "author", "from", "type"):
         value = item.get(key)
         if isinstance(value, str):
             return value.strip().lower()
@@ -678,7 +690,8 @@ def _read_history_items(path: Path) -> list[dict]:
             except json.JSONDecodeError:
                 continue
             if isinstance(item, dict):
-                items.append(item)
+                walked = [nested for nested in _walk_history_json(item) if isinstance(nested, dict)]
+                items.extend(walked or [item])
         return items
 
     return [item for item in _walk_history_json(parsed) if isinstance(item, dict)]

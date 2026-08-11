@@ -43,7 +43,8 @@ If Sophia's official motor IDs are different, edit `MOTOR_INDEX_TO_ACTUATOR` in
 both `robot_end/bodycontrol_tcp_scalar_index.py` and `local_end/llm_move_sender.py`.
 
 If the chat history file is produced on the robot, also copy this helper to the
-robot:
+robot. For the current local `memory_supervisor/memory_sessions.jsonl` setup,
+you do not need this sync helper.
 
 ```text
 robot_end/sync_chat_history_to_local.py
@@ -157,24 +158,37 @@ export SOPHIA_MOTION_DURATION_SCALE=1.5   # slower, longer holds
 python realtime_chat_nonverbal_from_txt.py
 ```
 
-By default, `realtime_chat_nonverbal_from_txt.py` watches `input.txt` in the
-same folder. Edit or overwrite that file to trigger the planner and judge
-agents:
+By default, the chat-nonverbal scripts first watch the local memory-supervisor
+file:
+
+```text
+../memory_supervisor/memory_sessions.jsonl
+```
+
+When that file exists, they extract the newest `role:"ai"`, `role:"assistant"`,
+or `role:"robot"` message into `input.txt`, then send only that latest robot
+utterance to the motion agents.
+
+If the memory-supervisor file is not present, they fall back to:
+
+```text
+../chat_history.json
+../chat_history.jsonl
+```
+
+If no history file exists, they watch `input.txt` in the same folder. Edit or
+overwrite that file to trigger the planner and judge agents:
 
 ```powershell
 "Hello, nice to meet you. Let me explain how this works." | Set-Content input.txt
 ```
 
-If `../chat_history.json` exists relative to `local_end/`, the realtime script
-watches that file instead, extracts the newest `role:"ai"` message into
-`input.txt`, and sends only that latest robot utterance to the motion agents.
-For older setups, it also falls back to `../chat_history.jsonl`.
-
 Typical layout:
 
 ```text
-direct_body_control/chat_history.json
+direct_body_control/memory_supervisor/memory_sessions.jsonl
 direct_body_control/local_end/realtime_chat_nonverbal_from_txt.py
+direct_body_control/local_end/deepseek_chat_nonverbal_from_txt.py
 ```
 
 Manual extraction:

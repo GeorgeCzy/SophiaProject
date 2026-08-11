@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Extract the latest robot/AI utterance from chat_history.json or .jsonl into input.txt.
+Extract the latest robot/AI utterance from memory_sessions.jsonl or chat_history
+into input.txt.
 
 The chat-history file may contain the whole conversation as a JSON array/object
 or as JSON-lines. This script keeps only the newest message whose role is ai,
-assistant, or robot.
+assistant, or robot. JSONL records may be full nested memory-session objects.
 """
 
 from __future__ import annotations
@@ -26,7 +27,18 @@ def text_from_content(value: Any) -> str:
         parts = [text_from_content(item) for item in value]
         return " ".join(part for part in parts if part).strip()
     if isinstance(value, dict):
-        for key in ("text", "message", "content", "answer", "response", "utterance"):
+        for key in (
+            "text",
+            "message",
+            "content",
+            "answer",
+            "response",
+            "utterance",
+            "output_text",
+            "final_answer",
+            "value",
+            "parts",
+        ):
             text = text_from_content(value.get(key))
             if text:
                 return text
@@ -34,7 +46,7 @@ def text_from_content(value: Any) -> str:
 
 
 def role_from_item(item: dict[str, Any]) -> str:
-    for key in ("role", "speaker", "sender", "author", "from"):
+    for key in ("role", "speaker", "sender", "author", "from", "type"):
         value = item.get(key)
         if isinstance(value, str):
             return value.strip().lower()
@@ -99,7 +111,8 @@ def read_history_items(path: Path) -> list[dict[str, Any]]:
             except json.JSONDecodeError:
                 continue
             if isinstance(item, dict):
-                items.append(item)
+                walked = [nested for nested in walk_history_json(item) if isinstance(nested, dict)]
+                items.extend(walked or [item])
         return items
 
     return [item for item in walk_history_json(parsed) if isinstance(item, dict)]
@@ -157,7 +170,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--history",
         default="",
-        help="Path to chat-history file. Default: ../chat_history.json, falling back to ../chat_history.jsonl.",
+        help=(
+            "Path to chat-history file. Default: ../memory_supervisor/memory_sessions.jsonl, "
+            "falling back to ../chat_history.json and ../chat_history.jsonl."
+        ),
     )
     parser.add_argument(
         "--output",
@@ -180,9 +196,15 @@ def main() -> int:
     if args.history:
         history_path = Path(args.history)
     else:
+        memory_path = script_dir.parent / "memory_supervisor" / "memory_sessions.jsonl"
         json_path = script_dir.parent / "chat_history.json"
         jsonl_path = script_dir.parent / "chat_history.jsonl"
-        history_path = json_path if json_path.exists() else jsonl_path
+        if memory_path.exists():
+            history_path = memory_path
+        elif json_path.exists():
+            history_path = json_path
+        else:
+            history_path = jsonl_path
     output_path = Path(args.output) if args.output else script_dir / "input.txt"
     roles = {role.strip().lower() for role in args.roles.split(",") if role.strip()}
 
