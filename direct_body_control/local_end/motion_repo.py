@@ -447,8 +447,8 @@ MOTIONS = {  # Primitive executable keyframes. Compose simultaneous poses with A
         "RightElbowPitch": 119,
         "RightElbowYaw": -113,
         "RightThumbFinger": -75,
-        "RightRingFinger": -136,
-        "RightPinkyFinger": 75,
+        "RightRingFinger": 136,
+        "RightPinkyFinger": -70,
   
     },
     "rightFigureOne": {
