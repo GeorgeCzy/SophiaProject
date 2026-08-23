@@ -128,6 +128,11 @@ Planning rules:
   Example: leftHandRaise+rightHandRaise means raise both hands at the same time.
 - Use + when the meaning needs both sides together, such as surrender, two-handed
   presenting, balanced emphasis, or strong agreement.
+- Digit/figure keyframes only move the fingers; combine them with the matching
+  raised-hand atom so the number is visible, such as rightHandRaise+rightFigureTwo
+  or leftHandRaise+leftFigureFour.
+- rightThumbUp already includes the raised right arm and should not be treated
+  as a hand-only digit gesture or combined with rightHandRaise.
 - Do not invent new combined names. Compose from listed primitive keyframes instead.
 - Prefer one clear communicative idea per sequence: greeting, positive feedback, thinking, presenting, or subtle speaking beats.
 - For short speech, use 2-4 action lines. For longer explanations, use 4-7 action lines.
@@ -178,10 +183,11 @@ Planner candidates:
 Selection criteria, in priority order:
 1. Semantic fit to the spoken text.
 2. Safe and natural upper-body motion.
-3. Valid keyframe names only.
-4. Appropriate duration relative to the speech duration.
-5. Clean ending: usually standby.
-6. Use A+B composition when the speech implies simultaneous two-sided motion.
+3. Correct sequencing and composition: digit/figure keyframes should be combined with the matching hand raise; rightThumbUp already includes the raised right arm.
+4. Valid keyframe names only.
+5. Appropriate duration relative to the speech duration.
+6. Clean ending: usually standby.
+7. Use A+B composition when the speech implies simultaneous two-sided motion.
 
 If the best candidate has small errors, repair it. If all candidates are poor, create a better valid sequence.
 

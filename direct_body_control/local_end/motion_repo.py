@@ -84,9 +84,9 @@ MOTION_DESCRIPTIONS = {
     },
     "rightThumbUp": {
         "category": "positive",
-        "description": "Right upper arm lifts forward, the right elbow is slightly bent, the right thumb stays extended, and the other right fingers curl inward.",
+        "description": "Right upper arm lifts forward while the right hand forms a thumbs-up approval gesture.",
         "best_for": "Agreement, encouragement, success, praise, or confidence. Can combine with leftThumbUp for stronger two-handed approval.",
-        "caution": "Avoid for sad, serious, or factual neutral speech.",
+        "caution": "This is an arm-plus-hand keyframe, not a hand-only digit shape. Do not combine it with rightHandRaise.",
     },
     "peaceSign": {
         "category": "positive",
@@ -112,6 +112,30 @@ MOTION_DESCRIPTIONS = {
         "best_for": "One beat in a right-hand wave sequence.",
         "caution": "Use after rightHandRaise or between wave beats.",
     },
+    "rightFigureOne": {
+        "category": "hand_shape",
+        "description": "Right hand forms a number-one gesture with the index finger extended and the other fingers curled inward.",
+        "best_for": "Counting one, saying first, emphasizing a single point, or showing the number one.",
+        "caution": "Hand-only keyframe; combine with rightHandRaise as rightHandRaise+rightFigureOne so the raised hand is visible.",
+    },
+    "rightFigureTwo": {
+        "category": "hand_shape",
+        "description": "Right hand forms a number-two gesture with index and middle fingers extended while thumb, ring, and pinky are curled inward.",
+        "best_for": "Counting two, saying second, comparing two items, or showing the number two.",
+        "caution": "Hand-only keyframe; combine with rightHandRaise as rightHandRaise+rightFigureTwo so the raised hand is visible.",
+    },
+    "rightFigureThree": {
+        "category": "hand_shape",
+        "description": "Right hand forms a number-three gesture with index, middle, and ring fingers extended while thumb and pinky are curled inward.",
+        "best_for": "Counting three, saying third, listing three points, or showing the number three.",
+        "caution": "Hand-only keyframe; combine with rightHandRaise as rightHandRaise+rightFigureThree so the raised hand is visible.",
+    },
+    "rightFigureFive": {
+        "category": "hand_shape",
+        "description": "Right hand forms a number-five or open-hand counting gesture, with the thumb set and the fingers intended open.",
+        "best_for": "Counting five, saying fifth, showing an open hand, or emphasizing a complete set.",
+        "caution": "Hand-only keyframe; combine with rightHandRaise as rightHandRaise+rightFigureFive so the raised hand is visible.",
+    },
     "leftHandRaise": {
         "category": "greeting",
         "description": "Left shoulder lifts the upper arm, left elbow bends, and the left forearm rises upright with the hand near or above shoulder height.",
@@ -129,6 +153,30 @@ MOTION_DESCRIPTIONS = {
         "description": "Left arm remains raised while the upper arm and forearm shift the raised left hand toward the robot's left side.",
         "best_for": "One beat in a left-hand wave sequence.",
         "caution": "Use after leftHandRaise or between wave beats.",
+    },
+    "leftFigureOne": {
+        "category": "hand_shape",
+        "description": "Left hand forms a number-one gesture with the index finger extended and the other fingers curled inward.",
+        "best_for": "Counting one, saying first, emphasizing a single point, or showing the number one.",
+        "caution": "Hand-only keyframe; combine with leftHandRaise as leftHandRaise+leftFigureOne so the raised hand is visible.",
+    },
+    "leftFigureTwo": {
+        "category": "hand_shape",
+        "description": "Left hand forms a number-two gesture with index and middle fingers extended while thumb, ring, and pinky are curled inward.",
+        "best_for": "Counting two, saying second, comparing two items, or showing the number two.",
+        "caution": "Hand-only keyframe; combine with leftHandRaise as leftHandRaise+leftFigureTwo so the raised hand is visible.",
+    },
+    "leftFigureThree": {
+        "category": "hand_shape",
+        "description": "Left hand forms a number-three gesture with index, middle, and ring fingers extended while thumb and pinky are curled inward.",
+        "best_for": "Counting three, saying third, listing three points, or showing the number three.",
+        "caution": "Hand-only keyframe; combine with leftHandRaise as leftHandRaise+leftFigureThree so the raised hand is visible.",
+    },
+    "leftFigureFour": {
+        "category": "hand_shape",
+        "description": "Left hand forms a number-four gesture with index, middle, ring, and pinky fingers extended while the thumb is curled inward.",
+        "best_for": "Counting four, saying fourth, listing four points, or showing the number four.",
+        "caution": "Hand-only keyframe; combine with leftHandRaise as leftHandRaise+leftFigureFour so the raised hand is visible.",
     },
     "idea": {
         "category": "thinking",
@@ -326,10 +374,10 @@ MOTIONS = {  # Primitive executable keyframes. Compose simultaneous poses with A
     "rightThumbUp": {
         "RightShoulderPitch": -71.0,
         "RightThumbFinger": 44.0,
-        "RightIndexFinger": 123.0, # wrong parameter on the webend
-        "RightMiddleFinger": -132.0, # wrong parameter on the webend
-        "RightRingFinger": -136.0, # wrong parameter on the webend
-        "RightPinkyFinger": 75.0, # wrong parameter on the webend
+        "RightIndexFinger": -120.0,
+        "RightMiddleFinger": 120.0,
+        "RightRingFinger": 130.0,
+        "RightPinkyFinger": -70.0,
         "RightThumbRoll": 22,
     },
     "rightHandRaise":{
@@ -402,6 +450,46 @@ MOTIONS = {  # Primitive executable keyframes. Compose simultaneous poses with A
         "RightRingFinger": -136,
         "RightPinkyFinger": 75,
   
+    },
+    "rightFigureOne": {
+        "RightThumbRoll": -1,
+        "RightThumbFinger": -53,
+        "RightMiddleFinger": 130,
+        "RightRingFinger": 130,
+        "RightPinkyFinger": -66,
+    },
+    "rightFigureTwo": {
+        "RightThumbRoll": -1,
+        "RightThumbFinger": -53,
+        "RightRingFinger": 130,
+        "RightPinkyFinger": -66,
+    },
+    "rightFigureThree": {
+        "RightThumbRoll": -1,
+        "RightThumbFinger": -53,
+        "RightPinkyFinger": -66,
+    },
+    "rightFigureFive": {
+        "RightThumbRoll": -1,
+        "RightThumbFinger": -53,
+    },
+    "leftFigureOne": {
+        "LeftThumbFinger": 70,
+        "LeftMiddleFinger": 130,
+        "LeftRingFinger": 130,
+        "LeftPinkyFinger": 70,
+    },
+    "leftFigureTwo": {
+        "LeftThumbFinger": 70,
+        "LeftRingFinger": 130,
+        "LeftPinkyFinger": 70,
+    },
+    "leftFigureThree": {
+        "LeftThumbFinger": 70,
+        "LeftPinkyFinger": 70,
+    },
+    "leftFigureFour": {
+        "LeftThumbFinger": 70,
     },
     "rightArmLiftFlat":{
         "RightShoulderPitch": -145,

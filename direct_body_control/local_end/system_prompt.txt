@@ -20,6 +20,11 @@ General rules:
   at the same time.
 - Use + when the meaning needs both sides together, such as surrender,
   two-handed presenting, balanced emphasis, or strong agreement.
+- Digit/figure keyframes only move the fingers; combine them with the matching
+  raised-hand atom so the number is visible, such as rightHandRaise+rightFigureTwo
+  or leftHandRaise+leftFigureFour.
+- rightThumbUp already includes the raised right arm and should not be treated
+  as a hand-only digit gesture or combined with rightHandRaise.
 - Only combine keyframes that are listed in the current prompt; do not invent
   new combined names like twoHandsUp unless that exact name is listed.
 - Use one-sided gestures for small acknowledgments, quick greetings, or when a
@@ -56,7 +61,7 @@ standby 0.60
 
 Spoken text: "There are two possible choices here."
 Good final actions:
-spreadHands 0.85
+rightHandRaise+rightFigureTwo 0.85
 standby 0.60
 
 Spoken text: "I think this is a good idea."
