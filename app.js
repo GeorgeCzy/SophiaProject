@@ -334,11 +334,19 @@ function render() {
   elements.previousButton.disabled = state.currentIndex === 0;
   elements.exportButton.disabled = attempted === 0;
   elements.exportButton.textContent =
-    complete === state.clips.length ? "Export CSV" : "End & Export CSV";
+    config.submitEndpoint
+      ? "Download Backup CSV"
+      : complete === state.clips.length
+        ? "Export CSV"
+        : "End & Export CSV";
   if (elements.submitButton) {
     elements.submitButton.hidden = !config.submitEndpoint;
     elements.submitButton.disabled = !config.submitEndpoint || attempted === 0 || state.submitting;
-    elements.submitButton.textContent = state.submitting ? "Submitting..." : "Submit Online";
+    elements.submitButton.textContent = state.submitting
+      ? "Submitting..."
+      : complete === state.clips.length
+        ? "Submit Online"
+        : "End & Submit Online";
   }
   if (elements.submitStatus) {
     elements.submitStatus.textContent = config.submitEndpoint ? state.submitStatus : "";
