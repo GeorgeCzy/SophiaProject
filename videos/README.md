@@ -1,8 +1,5 @@
-Place the 40 study videos in this folder using these default names:
+This folder contains the 40 study videos used by the rating website.
 
-video-01.mp4
-video-02.mp4
-...
-video-40.mp4
-
-To use different filenames or hosted URLs, edit public/video-manifest.json.
+The current video manifest maps the 40 dialogue stimuli to the uploaded
+`IMG_*.MOV` files in filename order. If the video filenames change, update
+`video-manifest.json` so each item points to the correct clip.
