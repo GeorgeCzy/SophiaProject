@@ -1,4 +1,5 @@
 const STORAGE_KEY = "sophia-public-rating-session";
+const ratingValues = [1, 2, 3, 4, 5];
 
 const criteria = [
   {
@@ -135,11 +136,29 @@ function getCurrentClip() {
 }
 
 function isRatingComplete(rating) {
-  return Boolean(rating && criteria.every((criterion) => rating[criterion.key]));
+  return Boolean(rating && criteria.every((criterion) => ratingValues.includes(rating[criterion.key])));
+}
+
+function hasAnyRating(rating) {
+  return Boolean(
+    rating &&
+      (criteria.some((criterion) => ratingValues.includes(rating[criterion.key])) ||
+        rating.playbackIssue ||
+        rating.comment?.trim()),
+  );
+}
+
+function getRatingValue(rating, key) {
+  const value = rating?.[key];
+  return ratingValues.includes(value) ? value : "";
 }
 
 function completedCount() {
   return state.clips.filter((clip) => isRatingComplete(state.ratings[clip.id])).length;
+}
+
+function attemptedCount() {
+  return state.clips.filter((clip) => hasAnyRating(state.ratings[clip.id])).length;
 }
 
 function csvEscape(value) {
@@ -204,7 +223,7 @@ function renderRatingControls() {
     `;
 
     const scale = field.querySelector(".rating-scale");
-    for (let value = 1; value <= 7; value += 1) {
+    ratingValues.forEach((value) => {
       const label = document.createElement("label");
       label.innerHTML = `
         <input type="radio" name="${criterion.key}" value="${value}" />
@@ -220,7 +239,7 @@ function renderRatingControls() {
         render();
       });
       scale.appendChild(label);
-    }
+    });
     elements.ratingList.appendChild(field);
   });
 }
@@ -258,6 +277,7 @@ function render() {
   const clip = getCurrentClip();
   const rating = state.ratings[clip.id] || {};
   const complete = completedCount();
+  const attempted = attemptedCount();
   const progress = state.clips.length ? Math.round((complete / state.clips.length) * 100) : 0;
 
   elements.participantLabel.textContent = state.participantId || "Participant";
@@ -283,13 +303,15 @@ function render() {
     const key = card.querySelector("input")?.name;
     card.querySelectorAll("label").forEach((label) => {
       const value = Number(label.querySelector("input").value);
-      label.classList.toggle("selected", rating[key] === value);
-      label.querySelector("input").checked = rating[key] === value;
+      label.classList.toggle("selected", getRatingValue(rating, key) === value);
+      label.querySelector("input").checked = getRatingValue(rating, key) === value;
     });
   });
 
   elements.previousButton.disabled = state.currentIndex === 0;
-  elements.exportButton.disabled = complete === 0;
+  elements.exportButton.disabled = attempted === 0;
+  elements.exportButton.textContent =
+    complete === state.clips.length ? "Export CSV" : "End & Export CSV";
   elements.saveButton.disabled = !isRatingComplete(rating);
   elements.saveButton.textContent =
     state.currentIndex === orderedClips.length - 1
@@ -333,6 +355,9 @@ function completeCurrent() {
 }
 
 function exportCsv() {
+  const exportableClips = getOrderedClips().filter((clip) => hasAnyRating(state.ratings[clip.id]));
+  if (!exportableClips.length) return;
+
   const header = [
     "participant_id",
     "session_label",
@@ -343,6 +368,7 @@ function exportCsv() {
     "clip_title",
     "condition",
     "video_src",
+    "is_complete",
     ...criteria.map((criterion) => criterion.key),
     "playback_issue",
     "comment",
@@ -351,19 +377,21 @@ function exportCsv() {
   const exportedAt = new Date().toISOString();
   const lines = [
     header.map(csvEscape).join(","),
-    ...getOrderedClips().map((clip, index) => {
+    ...exportableClips.map((clip) => {
       const rating = state.ratings[clip.id] || {};
+      const orderedIndex = getOrderedClips().findIndex((orderedClip) => orderedClip.id === clip.id);
       return [
         state.participantId,
         state.sessionLabel,
         state.startedAt,
         exportedAt,
-        index + 1,
+        orderedIndex + 1,
         clip.id,
         clip.title,
         clip.condition,
         clip.src,
-        ...criteria.map((criterion) => rating[criterion.key]),
+        isRatingComplete(rating),
+        ...criteria.map((criterion) => getRatingValue(rating, criterion.key)),
         rating.playbackIssue || false,
         rating.comment,
         rating.completedAt,
