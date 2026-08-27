@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A public rating page for evaluating Sophia social robot verbal and motion behavior."
+    />
+    <title>Sophia Social Robot Rating</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="setupScreen" class="setup-screen">
+      <section class="setup-panel" aria-labelledby="setupTitle">
+        <div class="brand-row">
+          <span class="mark" aria-hidden="true">S</span>
+          <div>
+            <p class="eyebrow">Sophia Study</p>
+            <h1 id="setupTitle">Social Robot Rating</h1>
+          </div>
+        </div>
+
+        <div class="intro-grid">
+          <div>
+            <h2>Review each interaction</h2>
+            <p>
+              Watch Sophia's response in a daily conversation scenario, then rate
+              the verbal answer and body motion as one social robot behavior.
+            </p>
+          </div>
+          <div class="scale-note">
+            <span>Scale</span>
+            <strong>1 = strongly disagree</strong>
+            <strong>7 = strongly agree</strong>
+          </div>
+        </div>
+
+        <div class="setup-grid">
+          <label class="input-group">
+            Participant ID
+            <input id="participantInput" autocomplete="off" placeholder="P001" />
+          </label>
+          <label class="input-group">
+            Session label
+            <input id="sessionInput" autocomplete="off" placeholder="pilot-a" />
+          </label>
+        </div>
+
+        <label class="check-row">
+          <input id="randomizeInput" type="checkbox" checked />
+          Randomize video order for this participant
+        </label>
+
+        <div id="criterionPreview" class="criterion-preview" aria-label="Rating dimensions"></div>
+
+        <div class="setup-actions">
+          <button id="startButton" class="primary-button" type="button">Start Rating</button>
+          <span id="videoCountLabel">Loading videos...</span>
+        </div>
+      </section>
+    </main>
+
+    <main id="ratingApp" class="app-shell" hidden>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Sophia Study</p>
+          <h1>Social Robot Rating</h1>
+        </div>
+        <div class="session-meta">
+          <span id="participantLabel">Participant</span>
+          <span id="completeLabel">0/40 complete</span>
+        </div>
+      </header>
+
+      <section class="progress-strip" aria-label="Study progress">
+        <div class="progress-track"><span id="progressFill"></span></div>
+        <div id="clipDots" class="clip-dots"></div>
+      </section>
+
+      <div class="workspace">
+        <section class="video-section" aria-labelledby="clipTitle">
+          <div class="clip-heading">
+            <div>
+              <p id="clipPosition" class="eyebrow">Video 1 of 40</p>
+              <h2 id="clipTitle">Video</h2>
+            </div>
+            <span class="score-scale">1 disagree · 7 agree</span>
+          </div>
+
+          <div class="video-frame">
+            <video id="clipVideo" controls playsinline preload="metadata"></video>
+            <div id="videoWarning" class="video-warning" hidden></div>
+          </div>
+
+          <div class="context-panel">
+            <div>
+              <span>Situation</span>
+              <p id="clipSituation"></p>
+            </div>
+            <div>
+              <span>User says</span>
+              <p id="clipUser"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rating-section" aria-label="Rating form">
+          <div id="ratingList" class="rating-list"></div>
+
+          <label class="notes-box">
+            Optional comment
+            <textarea
+              id="commentInput"
+              placeholder="What made this response feel better or worse?"
+            ></textarea>
+          </label>
+
+          <label class="check-row compact">
+            <input id="playbackIssueInput" type="checkbox" />
+            Playback issue
+          </label>
+        </section>
+      </div>
+
+      <nav class="action-bar" aria-label="Rating navigation">
+        <button id="previousButton" class="secondary-button" type="button">Previous</button>
+        <button id="resetButton" class="ghost-button" type="button">Reset</button>
+        <button id="exportButton" class="secondary-button" type="button">Export CSV</button>
+        <button id="saveButton" class="primary-button" type="button">Save & Next</button>
+      </nav>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
