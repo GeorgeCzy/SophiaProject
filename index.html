@@ -52,6 +52,14 @@
           Randomize video order for this participant
         </label>
 
+        <div id="resumePanel" class="resume-panel" hidden>
+          <div>
+            <strong>Saved progress found</strong>
+            <span id="resumeSummary">0/40 complete</span>
+          </div>
+          <button id="resumeButton" class="secondary-button" type="button">Resume</button>
+        </div>
+
         <div id="criterionPreview" class="criterion-preview" aria-label="Rating dimensions"></div>
 
         <div class="setup-actions">
@@ -127,10 +135,13 @@
         <button id="previousButton" class="secondary-button" type="button">Previous</button>
         <button id="resetButton" class="ghost-button" type="button">Reset</button>
         <button id="exportButton" class="secondary-button" type="button">End &amp; Export CSV</button>
+        <button id="submitButton" class="secondary-button" type="button" hidden>Submit Online</button>
+        <span id="submitStatus" class="submit-status" role="status"></span>
         <button id="saveButton" class="primary-button" type="button">Save & Next</button>
       </nav>
     </main>
 
+    <script src="config.js"></script>
     <script src="app.js" defer></script>
   </body>
 </html>

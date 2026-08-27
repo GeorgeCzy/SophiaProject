@@ -203,6 +203,34 @@ h2 {
   margin: 0;
 }
 
+.resume-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid #cfddd8;
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 14px;
+}
+
+.resume-panel div {
+  display: grid;
+  gap: 4px;
+}
+
+.resume-panel strong {
+  color: #1e252b;
+  font-size: 14px;
+}
+
+.resume-panel span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .criterion-preview {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -549,6 +577,13 @@ h2 {
   min-width: 142px;
 }
 
+.submit-status {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
 @media (max-width: 1080px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -571,6 +606,7 @@ h2 {
   .topbar,
   .clip-heading,
   .setup-actions,
+  .resume-panel,
   .action-bar,
   .intro-grid {
     align-items: stretch;
@@ -599,7 +635,8 @@ h2 {
 
   .action-bar .primary-button,
   .secondary-button,
-  .ghost-button {
+  .ghost-button,
+  .resume-panel .secondary-button {
     width: 100%;
     margin-left: 0;
   }

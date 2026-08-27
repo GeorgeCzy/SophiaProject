@@ -1,5 +1,10 @@
 const STORAGE_KEY = "sophia-public-rating-session";
 const ratingValues = [1, 2, 3, 4, 5];
+const config = {
+  submitEndpoint: "",
+  submitMode: "no-cors",
+  ...(window.SOPHIA_RATING_CONFIG || {}),
+};
 
 const criteria = [
   {
@@ -50,6 +55,9 @@ const state = {
   ratings: {},
   videoErrors: {},
   startedAt: "",
+  resumeAvailable: false,
+  submitting: false,
+  submitStatus: "",
 };
 
 const elements = {
@@ -58,6 +66,9 @@ const elements = {
   participantInput: document.querySelector("#participantInput"),
   sessionInput: document.querySelector("#sessionInput"),
   randomizeInput: document.querySelector("#randomizeInput"),
+  resumePanel: document.querySelector("#resumePanel"),
+  resumeSummary: document.querySelector("#resumeSummary"),
+  resumeButton: document.querySelector("#resumeButton"),
   startButton: document.querySelector("#startButton"),
   videoCountLabel: document.querySelector("#videoCountLabel"),
   criterionPreview: document.querySelector("#criterionPreview"),
@@ -77,6 +88,8 @@ const elements = {
   previousButton: document.querySelector("#previousButton"),
   resetButton: document.querySelector("#resetButton"),
   exportButton: document.querySelector("#exportButton"),
+  submitButton: document.querySelector("#submitButton"),
+  submitStatus: document.querySelector("#submitStatus"),
   saveButton: document.querySelector("#saveButton"),
 };
 
@@ -190,11 +203,14 @@ function restoreSession() {
     state.participantId = parsed.participantId || "";
     state.sessionLabel = parsed.sessionLabel || "";
     state.randomizeOrder = parsed.randomizeOrder ?? true;
-    state.started = parsed.started || false;
+    state.started = false;
     state.currentIndex = parsed.currentIndex || 0;
     state.order = Array.isArray(parsed.order) ? parsed.order : [];
     state.ratings = parsed.ratings || {};
     state.startedAt = parsed.startedAt || "";
+    state.resumeAvailable = Boolean(
+      parsed.started || parsed.startedAt || Object.keys(state.ratings).length,
+    );
   } catch {
     window.localStorage.removeItem(STORAGE_KEY);
   }
@@ -264,10 +280,19 @@ function renderDots() {
 }
 
 function render() {
+  const complete = completedCount();
+  const attempted = attemptedCount();
+  const resumeVisible = state.resumeAvailable && (Boolean(state.startedAt) || attempted > 0);
+
   elements.videoCountLabel.textContent = `${state.clips.length} videos`;
   elements.participantInput.value = state.participantId;
   elements.sessionInput.value = state.sessionLabel;
   elements.randomizeInput.checked = state.randomizeOrder;
+  if (elements.resumePanel) {
+    elements.resumePanel.hidden = !resumeVisible;
+    elements.resumeSummary.textContent = `${state.participantId || "Saved participant"} · ${complete}/${state.clips.length} complete · ${attempted} started`;
+    elements.resumeButton.disabled = !resumeVisible;
+  }
 
   elements.setupScreen.hidden = state.started;
   elements.ratingApp.hidden = !state.started;
@@ -276,8 +301,6 @@ function render() {
   const orderedClips = getOrderedClips();
   const clip = getCurrentClip();
   const rating = state.ratings[clip.id] || {};
-  const complete = completedCount();
-  const attempted = attemptedCount();
   const progress = state.clips.length ? Math.round((complete / state.clips.length) * 100) : 0;
 
   elements.participantLabel.textContent = state.participantId || "Participant";
@@ -312,6 +335,14 @@ function render() {
   elements.exportButton.disabled = attempted === 0;
   elements.exportButton.textContent =
     complete === state.clips.length ? "Export CSV" : "End & Export CSV";
+  if (elements.submitButton) {
+    elements.submitButton.hidden = !config.submitEndpoint;
+    elements.submitButton.disabled = !config.submitEndpoint || attempted === 0 || state.submitting;
+    elements.submitButton.textContent = state.submitting ? "Submitting..." : "Submit Online";
+  }
+  if (elements.submitStatus) {
+    elements.submitStatus.textContent = config.submitEndpoint ? state.submitStatus : "";
+  }
   elements.saveButton.disabled = !isRatingComplete(rating);
   elements.saveButton.textContent =
     state.currentIndex === orderedClips.length - 1
@@ -327,6 +358,10 @@ function startSession() {
   state.participantId = id;
   state.sessionLabel = elements.sessionInput.value.trim();
   state.randomizeOrder = elements.randomizeInput.checked;
+  state.ratings = {};
+  state.videoErrors = {};
+  state.resumeAvailable = false;
+  state.submitStatus = "";
   state.order = state.randomizeOrder
     ? seededShuffle(
         state.clips.map((clip) => clip.id),
@@ -336,6 +371,20 @@ function startSession() {
   state.currentIndex = 0;
   state.started = true;
   state.startedAt = new Date().toISOString();
+  saveSession();
+  render();
+}
+
+function resumeSession() {
+  if (!state.resumeAvailable) return;
+  if (!state.order.length) {
+    state.order = state.clips.map((clip) => clip.id);
+  }
+  if (!state.startedAt) {
+    state.startedAt = new Date().toISOString();
+  }
+  state.started = true;
+  state.submitStatus = "";
   saveSession();
   render();
 }
@@ -354,11 +403,8 @@ function completeCurrent() {
   render();
 }
 
-function exportCsv() {
-  const exportableClips = getOrderedClips().filter((clip) => hasAnyRating(state.ratings[clip.id]));
-  if (!exportableClips.length) return;
-
-  const header = [
+function getCsvHeader() {
+  return [
     "participant_id",
     "session_label",
     "started_at",
@@ -374,12 +420,14 @@ function exportCsv() {
     "comment",
     "completed_at",
   ];
-  const exportedAt = new Date().toISOString();
-  const lines = [
-    header.map(csvEscape).join(","),
-    ...exportableClips.map((clip) => {
+}
+
+function buildExportRows(exportedAt = new Date().toISOString()) {
+  const orderedClips = getOrderedClips();
+  const exportableClips = orderedClips.filter((clip) => hasAnyRating(state.ratings[clip.id]));
+  return exportableClips.map((clip) => {
       const rating = state.ratings[clip.id] || {};
-      const orderedIndex = getOrderedClips().findIndex((orderedClip) => orderedClip.id === clip.id);
+      const orderedIndex = orderedClips.findIndex((orderedClip) => orderedClip.id === clip.id);
       return [
         state.participantId,
         state.sessionLabel,
@@ -395,10 +443,24 @@ function exportCsv() {
         rating.playbackIssue || false,
         rating.comment,
         rating.completedAt,
-      ]
-        .map(csvEscape)
-        .join(",");
-    }),
+      ];
+    });
+}
+
+function rowsToObjects(rows) {
+  const header = getCsvHeader();
+  return rows.map((row) =>
+    Object.fromEntries(header.map((key, index) => [key, row[index] ?? ""])),
+  );
+}
+
+function exportCsv() {
+  const rows = buildExportRows();
+  if (!rows.length) return;
+
+  const lines = [
+    getCsvHeader().map(csvEscape).join(","),
+    ...rows.map((row) => row.map(csvEscape).join(",")),
   ];
 
   const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
@@ -410,6 +472,48 @@ function exportCsv() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+async function submitResponses() {
+  const submittedAt = new Date().toISOString();
+  const rows = buildExportRows(submittedAt);
+  if (!rows.length || !config.submitEndpoint) return;
+
+  state.submitting = true;
+  state.submitStatus = "Submitting...";
+  render();
+
+  try {
+    const noCors = config.submitMode !== "cors";
+    const response = await fetch(config.submitEndpoint, {
+      method: "POST",
+      mode: noCors ? "no-cors" : "cors",
+      headers: {
+        "Content-Type": noCors ? "text/plain;charset=utf-8" : "application/json",
+      },
+      body: JSON.stringify({
+        participantId: state.participantId,
+        sessionLabel: state.sessionLabel,
+        startedAt: state.startedAt,
+        submittedAt,
+        completedCount: completedCount(),
+        attemptedCount: attemptedCount(),
+        totalClips: state.clips.length,
+        rows: rowsToObjects(rows),
+      }),
+    });
+
+    if (!noCors && !response.ok) {
+      throw new Error(`Submit failed with ${response.status}`);
+    }
+    state.submitStatus = `Submitted ${rows.length} row${rows.length === 1 ? "" : "s"}.`;
+  } catch {
+    state.submitStatus = "Submit failed. Export CSV as backup.";
+  } finally {
+    state.submitting = false;
+    saveSession();
+    render();
+  }
 }
 
 function resetSession() {
@@ -425,6 +529,8 @@ function resetSession() {
   state.ratings = {};
   state.videoErrors = {};
   state.startedAt = "";
+  state.resumeAvailable = false;
+  state.submitStatus = "";
   render();
 }
 
@@ -455,6 +561,7 @@ function bindEvents() {
     saveSession();
   });
   elements.startButton.addEventListener("click", startSession);
+  elements.resumeButton?.addEventListener("click", resumeSession);
   elements.previousButton.addEventListener("click", () => {
     state.currentIndex = Math.max(state.currentIndex - 1, 0);
     saveSession();
@@ -462,6 +569,7 @@ function bindEvents() {
   });
   elements.resetButton.addEventListener("click", resetSession);
   elements.exportButton.addEventListener("click", exportCsv);
+  elements.submitButton?.addEventListener("click", submitResponses);
   elements.saveButton.addEventListener("click", completeCurrent);
   elements.commentInput.addEventListener("input", (event) => {
     const clip = getCurrentClip();
