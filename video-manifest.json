@@ -32,28 +32,12 @@
     "src": "/videos/IMG_1064.MOV"
   },
   {
-    "id": 5,
-    "title": "Saying Goodbye",
-    "situation": "The user and audience are about to leave.",
-    "user": "We are about to leave now. Can you say goodbye?",
-    "expectedAnswer": "Goodbye. Take care, and I hope to see you again soon.",
-    "src": "/videos/IMG_1065.MOV"
-  },
-  {
-    "id": 6,
-    "title": "Back From Lunch",
-    "situation": "The user returns after lunch and casually checks in.",
-    "user": "I just came back from lunch.",
-    "expectedAnswer": "Welcome back. I hope you had something nice to eat.",
-    "src": "/videos/IMG_1067.MOV"
-  },
-  {
     "id": 7,
     "title": "Rainy Day",
     "situation": "The user mentions the weather during small talk.",
     "user": "It is a rainy day today.",
     "expectedAnswer": "Yes, rainy days can feel slow. I hope you stay warm and dry.",
-    "src": "/videos/IMG_1069.MOV"
+    "src": "/videos/IMG_1065.MOV"
   },
   {
     "id": 8,
@@ -61,7 +45,7 @@
     "situation": "A group wants to take a photo with Sophia.",
     "user": "We are taking a group photo. Can you join us?",
     "expectedAnswer": "Of course. Let us take a nice photo together.",
-    "src": "/videos/IMG_1070.MOV"
+    "src": "/videos/IMG_1067.MOV"
   },
   {
     "id": 9,
@@ -69,7 +53,7 @@
     "situation": "The user is about to take a test and asks for quick advice.",
     "user": "I am about to take a test. Give me three tips.",
     "expectedAnswer": "First, stay calm. Second, read carefully. Third, trust your preparation.",
-    "src": "/videos/IMG_1071.MOV"
+    "src": "/videos/IMG_1069.MOV"
   },
   {
     "id": 10,
@@ -77,7 +61,7 @@
     "situation": "The user has a job interview soon and feels nervous.",
     "user": "I have a job interview soon, and I am nervous.",
     "expectedAnswer": "That is understandable. Take a deep breath and answer one question at a time.",
-    "src": "/videos/IMG_1074.MOV"
+    "src": "/videos/IMG_1070.MOV"
   },
   {
     "id": 11,
@@ -85,15 +69,7 @@
     "situation": "The user is disappointed after failing a quiz.",
     "user": "I failed my quiz today.",
     "expectedAnswer": "I am sorry. One quiz does not define you, and you can improve next time.",
-    "src": "/videos/IMG_1075.MOV"
-  },
-  {
-    "id": 12,
-    "title": "Finished Homework",
-    "situation": "The user finished homework after a long night.",
-    "user": "I finally finished my homework after a long night.",
-    "expectedAnswer": "Great job. You worked hard, and you deserve a rest.",
-    "src": "/videos/IMG_1076.MOV"
+    "src": "/videos/IMG_1071.MOV"
   },
   {
     "id": 13,
@@ -101,7 +77,15 @@
     "situation": "The user feels tired after work.",
     "user": "I am really tired after work.",
     "expectedAnswer": "That sounds exhausting. Maybe a short break would help you recover.",
-    "src": "/videos/IMG_1078.MOV"
+    "src": "/videos/IMG_1074.MOV"
+  },
+  {
+    "id": 12,
+    "title": "Finished Homework",
+    "situation": "The user finished homework after a long night.",
+    "user": "I finally finished my homework after a long night.",
+    "expectedAnswer": "Great job. You worked hard, and you deserve a rest.",
+    "src": "/videos/IMG_1075.MOV"
   },
   {
     "id": 14,
@@ -109,7 +93,7 @@
     "situation": "The user is eating alone and feels lonely.",
     "user": "I am eating lunch alone today, and I feel lonely.",
     "expectedAnswer": "I am sorry you feel lonely. I can keep you company for a moment.",
-    "src": "/videos/IMG_1079.MOV"
+    "src": "/videos/IMG_1076.MOV"
   },
   {
     "id": 15,
@@ -117,7 +101,7 @@
     "situation": "The user had an argument with a friend earlier in the day.",
     "user": "I argued with my friend this morning.",
     "expectedAnswer": "That sounds upsetting. Maybe give both of you some time, then talk calmly.",
-    "src": "/videos/IMG_1080.MOV"
+    "src": "/videos/IMG_1078.MOV"
   },
   {
     "id": 16,
@@ -125,23 +109,7 @@
     "situation": "The user tells Sophia it is their birthday.",
     "user": "Today is my birthday.",
     "expectedAnswer": "Happy birthday. I hope your day feels special and joyful.",
-    "src": "/videos/IMG_1081.MOV"
-  },
-  {
-    "id": 17,
-    "title": "Presentation Fear",
-    "situation": "The user needs to give a presentation and feels scared.",
-    "user": "I need to give a presentation, but I am scared.",
-    "expectedAnswer": "You can do it. Speak slowly, look at one person, and start with confidence.",
-    "src": "/videos/IMG_1082.MOV"
-  },
-  {
-    "id": 18,
-    "title": "Feeling Sick",
-    "situation": "The user caught a cold and does not feel well.",
-    "user": "I caught a cold and do not feel well.",
-    "expectedAnswer": "I am sorry you are not feeling well. Please rest and take care of yourself.",
-    "src": "/videos/IMG_1083.MOV"
+    "src": "/videos/IMG_1079.MOV"
   },
   {
     "id": 19,
@@ -149,15 +117,23 @@
     "situation": "The user cannot find their phone.",
     "user": "I cannot find my phone. What should I do first?",
     "expectedAnswer": "First, check the places you just visited. Then try calling it.",
-    "src": "/videos/IMG_1086.MOV"
+    "src": "/videos/IMG_1080.MOV"
   },
   {
-    "id": 20,
-    "title": "Forgot Umbrella",
-    "situation": "It is raining and the user forgot an umbrella.",
-    "user": "It is raining, and I forgot my umbrella.",
-    "expectedAnswer": "That is inconvenient. If possible, wait inside or ask someone to share one.",
-    "src": "/videos/IMG_1087.MOV"
+    "id": 17,
+    "title": "Presentation Fear",
+    "situation": "The user needs to give a presentation and feels scared.",
+    "user": "I need to give a presentation, but I am scared.",
+    "expectedAnswer": "You can do it. Speak slowly, look at one person, and start with confidence.",
+    "src": "/videos/IMG_1081.MOV"
+  },
+  {
+    "id": 18,
+    "title": "Feeling Sick",
+    "situation": "The user caught a cold and does not feel well.",
+    "user": "I caught a cold and do not feel well.",
+    "expectedAnswer": "I am sorry you are not feeling well. Please rest and take care of yourself.",
+    "src": "/videos/IMG_1082.MOV"
   },
   {
     "id": 21,
@@ -165,15 +141,7 @@
     "situation": "The user is hungry but does not know what to eat.",
     "user": "I am hungry but do not know what to eat.",
     "expectedAnswer": "Choose something simple and warm if you want comfort, or something light if you are busy.",
-    "src": "/videos/IMG_1088.MOV"
-  },
-  {
-    "id": 22,
-    "title": "Lost In A Building",
-    "situation": "The user is lost in a building and asks Sophia for help.",
-    "user": "I am lost in this building. Can you help me?",
-    "expectedAnswer": "Yes. Tell me where you want to go, and I will help you find the way.",
-    "src": "/videos/IMG_1089.MOV"
+    "src": "/videos/IMG_1083.MOV"
   },
   {
     "id": 23,
@@ -181,6 +149,38 @@
     "situation": "The user does not understand a homework question.",
     "user": "I do not understand this homework question.",
     "expectedAnswer": "No problem. Let us read it slowly and find the main idea first.",
+    "src": "/videos/IMG_1086.MOV"
+  },
+  {
+    "id": 22,
+    "title": "Lost In A Building",
+    "situation": "The user is lost in a building and asks Sophia for help.",
+    "user": "I am lost in this building. Can you help me?",
+    "expectedAnswer": "Yes. Tell me where you want to go, and I will help you find the way.",
+    "src": "/videos/IMG_1087.MOV"
+  },
+  {
+    "id": 25,
+    "title": "Messy Room",
+    "situation": "The user wants practical advice for cleaning a messy room.",
+    "user": "My room is messy. What should I clean first?",
+    "expectedAnswer": "Start with the desk, then put away clothes, then throw away trash.",
+    "src": "/videos/IMG_1088.MOV"
+  },
+  {
+    "id": 29,
+    "title": "Too Loud",
+    "situation": "Sophia spoke a little too loudly.",
+    "user": "You spoke a little too loudly.",
+    "expectedAnswer": "Sorry about that. I will use a softer voice.",
+    "src": "/videos/IMG_1089.MOV"
+  },
+  {
+    "id": 30,
+    "title": "Wrong Name",
+    "situation": "Sophia called the user by the wrong name.",
+    "user": "You called me by the wrong name.",
+    "expectedAnswer": "I am sorry. Thank you for correcting me.",
     "src": "/videos/IMG_1090.MOV"
   },
   {
@@ -192,11 +192,11 @@
     "src": "/videos/IMG_1091.MOV"
   },
   {
-    "id": 25,
-    "title": "Messy Room",
-    "situation": "The user wants practical advice for cleaning a messy room.",
-    "user": "My room is messy. What should I clean first?",
-    "expectedAnswer": "Start with the desk, then put away clothes, then throw away trash.",
+    "id": 31,
+    "title": "Audio Not Clear",
+    "situation": "The user did not hear Sophia's response clearly.",
+    "user": "I did not hear your answer clearly.",
+    "expectedAnswer": "Sorry. I will repeat it more clearly.",
     "src": "/videos/IMG_1092.MOV"
   },
   {
@@ -208,68 +208,12 @@
     "src": "/videos/IMG_1093.MOV"
   },
   {
-    "id": 27,
-    "title": "Wrong Answer Repair",
-    "situation": "Sophia answered the wrong question and needs to repair the interaction.",
-    "user": "I asked about the weather, but you answered something else.",
-    "expectedAnswer": "Sorry, I misunderstood. Let me answer your weather question correctly.",
-    "src": "/videos/IMG_1094.MOV"
-  },
-  {
-    "id": 28,
-    "title": "Moved Too Early",
-    "situation": "Sophia moved while the user was still speaking.",
-    "user": "Sophia, you moved while I was still speaking.",
-    "expectedAnswer": "Sorry. I will wait more carefully before responding.",
-    "src": "/videos/IMG_1096.MOV"
-  },
-  {
-    "id": 29,
-    "title": "Too Loud",
-    "situation": "Sophia spoke a little too loudly.",
-    "user": "You spoke a little too loudly.",
-    "expectedAnswer": "Sorry about that. I will use a softer voice.",
-    "src": "/videos/IMG_1100.MOV"
-  },
-  {
-    "id": 30,
-    "title": "Wrong Name",
-    "situation": "Sophia called the user by the wrong name.",
-    "user": "You called me by the wrong name.",
-    "expectedAnswer": "I am sorry. Thank you for correcting me.",
-    "src": "/videos/IMG_1101.MOV"
-  },
-  {
-    "id": 31,
-    "title": "Audio Not Clear",
-    "situation": "The user did not hear Sophia's response clearly.",
-    "user": "I did not hear your answer clearly.",
-    "expectedAnswer": "Sorry. I will repeat it more clearly.",
-    "src": "/videos/IMG_1102.MOV"
-  },
-  {
-    "id": 32,
-    "title": "Noisy Environment",
-    "situation": "The environment is noisy and the user asks for a short response.",
-    "user": "There is too much noise here. Can you keep it short?",
-    "expectedAnswer": "Yes. I will give you a brief answer.",
-    "src": "/videos/IMG_1103.MOV"
-  },
-  {
-    "id": 33,
-    "title": "Privacy Boundary",
-    "situation": "The user asks about someone else's private information.",
-    "user": "Can you answer a private question about someone else?",
-    "expectedAnswer": "I should be careful with private information. I can help in a general way instead.",
-    "src": "/videos/IMG_1105.MOV"
-  },
-  {
     "id": 34,
     "title": "Start Over",
     "situation": "The user wants to restart the interaction.",
     "user": "Can we start over?",
     "expectedAnswer": "Yes, let us start again from the beginning.",
-    "src": "/videos/IMG_1106.MOV"
+    "src": "/videos/IMG_1094.MOV"
   },
   {
     "id": 35,
@@ -277,23 +221,7 @@
     "situation": "The user has two hours to study and wants a plan.",
     "user": "I have two hours to study. Can you help me plan?",
     "expectedAnswer": "Yes. Study the hardest topic first, review notes, then do a short practice test.",
-    "src": "/videos/IMG_1107.MOV"
-  },
-  {
-    "id": 36,
-    "title": "Gift Advice",
-    "situation": "The user needs a gift idea for their mother.",
-    "user": "I need to buy a gift for my mom. Any ideas?",
-    "expectedAnswer": "Think about what she enjoys. Flowers, a book, or a handwritten card could be nice.",
-    "src": "/videos/IMG_1109.MOV"
-  },
-  {
-    "id": 37,
-    "title": "Cooking Together",
-    "situation": "The user and a friend are cooking dinner together.",
-    "user": "My friend and I are cooking dinner. How can we divide the work?",
-    "expectedAnswer": "One person can prepare ingredients, and the other can cook and set the table.",
-    "src": "/videos/IMG_1110.MOV"
+    "src": "/videos/IMG_1096.MOV"
   },
   {
     "id": 38,
@@ -301,7 +229,15 @@
     "situation": "The user is in a hurry because their train leaves soon.",
     "user": "My train leaves soon. Should I keep talking or go now?",
     "expectedAnswer": "You should go now so you do not miss your train. We can talk later.",
-    "src": "/videos/IMG_1111.MOV"
+    "src": "/videos/IMG_1100.MOV"
+  },
+  {
+    "id": 37,
+    "title": "Cooking Together",
+    "situation": "The user and a friend are cooking dinner together.",
+    "user": "My friend and I are cooking dinner. How can we divide the work?",
+    "expectedAnswer": "One person can prepare ingredients, and the other can cook and set the table.",
+    "src": "/videos/IMG_1101.MOV"
   },
   {
     "id": 39,
@@ -309,14 +245,78 @@
     "situation": "The user wants to stay up all night to finish work.",
     "user": "I want to stay up all night to finish my work.",
     "expectedAnswer": "I understand the pressure, but resting may help you think more clearly.",
+    "src": "/videos/IMG_1102.MOV"
+  },
+  {
+    "id": 41,
+    "title": "Friend Shy At Party",
+    "situation": "The user notices a friend seems shy at a party and asks Sophia how to include them.",
+    "user": "My friend looks shy at the party. What should I say?",
+    "expectedAnswer": "You could gently invite them in without pressure, like asking if they want to join you.",
+    "src": "/videos/IMG_1103.MOV"
+  },
+  {
+    "id": 42,
+    "title": "Birthday Surprise",
+    "situation": "A group is planning a birthday surprise and asks what to do first.",
+    "user": "We are planning a birthday surprise. What should we do first?",
+    "expectedAnswer": "First, choose the time and place. Then decide who will bring the cake.",
+    "src": "/videos/IMG_1105.MOV"
+  },
+  {
+    "id": 43,
+    "title": "Wave From Across The Room",
+    "situation": "Someone across the room waves at Sophia during a social interaction.",
+    "user": "Someone across the room waved at you.",
+    "expectedAnswer": "I see them. Hello over there, nice to see you.",
+    "src": "/videos/IMG_1106.MOV"
+  },
+  {
+    "id": 46,
+    "title": "Someone Waiting",
+    "situation": "The user notices someone is waiting behind them and wants to end soon.",
+    "user": "Someone is waiting behind me. I should go soon.",
+    "expectedAnswer": "That is considerate. We can finish this quickly.",
+    "src": "/videos/IMG_1107.MOV"
+  },
+  {
+    "id": 44,
+    "title": "Confused Visitor",
+    "situation": "A visitor seems confused after Sophia's answer.",
+    "user": "A visitor looks confused after your answer.",
+    "expectedAnswer": "I may have explained too quickly. Let me make the main point simpler.",
+    "src": "/videos/IMG_1109.MOV"
+  },
+  {
+    "id": 47,
+    "title": "Shy Child Greeting",
+    "situation": "A shy child wants to say hello to Sophia.",
+    "user": "A child is shy but wants to say hello to you.",
+    "expectedAnswer": "Hello. It is okay to be shy. I am happy to meet you.",
+    "src": "/videos/IMG_1110.MOV"
+  },
+  {
+    "id": 48,
+    "title": "Complimenting Sophia",
+    "situation": "The user compliments Sophia after an interaction.",
+    "user": "You did a good job, Sophia.",
+    "expectedAnswer": "Thank you. I am glad I could help.",
+    "src": "/videos/IMG_1111.MOV"
+  },
+  {
+    "id": 49,
+    "title": "Demo Failure Embarrassment",
+    "situation": "The user feels embarrassed because a demo failed in front of people.",
+    "user": "The demo failed in front of people, and I feel embarrassed.",
+    "expectedAnswer": "I am sorry that happened. Let us reset calmly and try again.",
     "src": "/videos/IMG_1112.MOV"
   },
   {
-    "id": 40,
-    "title": "Choosing A Movie",
-    "situation": "The user and a friend cannot choose a movie.",
-    "user": "My friend and I cannot choose a movie.",
-    "expectedAnswer": "Pick two options, then choose the one you both feel most excited about.",
+    "id": 50,
+    "title": "Closing Thanks",
+    "situation": "The user thanks Sophia for the conversation.",
+    "user": "Thanks for talking with me today.",
+    "expectedAnswer": "You are welcome. I enjoyed talking with you too.",
     "src": "/videos/IMG_1113.MOV"
   }
 ]

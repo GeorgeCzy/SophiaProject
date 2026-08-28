@@ -1,4 +1,4 @@
-const STORAGE_KEY = "sophia-public-rating-session";
+const STORAGE_KEY = "sophia-public-rating-session-v2";
 const ratingValues = [1, 2, 3, 4, 5];
 const config = {
   submitEndpoint: "",
@@ -268,8 +268,8 @@ function renderDots() {
     dot.className = "clip-dot";
     if (index === state.currentIndex) dot.classList.add("current");
     if (isRatingComplete(state.ratings[clip.id])) dot.classList.add("complete");
-    dot.textContent = String(clip.id);
-    dot.setAttribute("aria-label", `Open video ${clip.id}`);
+    dot.textContent = String(index + 1);
+    dot.setAttribute("aria-label", `Open video ${index + 1}`);
     dot.addEventListener("click", () => {
       state.currentIndex = index;
       saveSession();
