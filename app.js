@@ -1,4 +1,4 @@
-const STORAGE_KEY = "sophia-public-rating-session-v2";
+const STORAGE_KEY = "sophia-public-rating-session-v3";
 const ratingValues = [1, 2, 3, 4, 5];
 const config = {
   submitEndpoint: "",
@@ -135,6 +135,15 @@ function seededShuffle(ids, seedText) {
     const random = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     const j = Math.floor(random * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function makePresentationOrder(ids, seedText) {
+  const shuffled = seededShuffle(ids, seedText || String(Date.now()));
+  const unchanged = shuffled.every((id, index) => id === ids[index]);
+  if (unchanged && shuffled.length > 1) {
+    return [...shuffled.slice(1), shuffled[0]];
   }
   return shuffled;
 }
@@ -287,7 +296,9 @@ function render() {
   elements.videoCountLabel.textContent = `${state.clips.length} videos`;
   elements.participantInput.value = state.participantId;
   elements.sessionInput.value = state.sessionLabel;
-  elements.randomizeInput.checked = state.randomizeOrder;
+  if (elements.randomizeInput) {
+    elements.randomizeInput.checked = true;
+  }
   if (elements.resumePanel) {
     elements.resumePanel.hidden = !resumeVisible;
     elements.resumeSummary.textContent = `${state.participantId || "Saved participant"} · ${complete}/${state.clips.length} complete · ${attempted} started`;
@@ -365,17 +376,15 @@ function startSession() {
   const id = elements.participantInput.value.trim() || `P-${String(Date.now()).slice(-6)}`;
   state.participantId = id;
   state.sessionLabel = elements.sessionInput.value.trim();
-  state.randomizeOrder = elements.randomizeInput.checked;
+  state.randomizeOrder = true;
   state.ratings = {};
   state.videoErrors = {};
   state.resumeAvailable = false;
   state.submitStatus = "";
-  state.order = state.randomizeOrder
-    ? seededShuffle(
-        state.clips.map((clip) => clip.id),
-        id,
-      )
-    : state.clips.map((clip) => clip.id);
+  state.order = makePresentationOrder(
+    state.clips.map((clip) => clip.id),
+    id,
+  );
   state.currentIndex = 0;
   state.started = true;
   state.startedAt = new Date().toISOString();
@@ -564,8 +573,8 @@ function bindEvents() {
     state.sessionLabel = event.target.value;
     saveSession();
   });
-  elements.randomizeInput.addEventListener("change", (event) => {
-    state.randomizeOrder = event.target.checked;
+  elements.randomizeInput?.addEventListener("change", () => {
+    state.randomizeOrder = true;
     saveSession();
   });
   elements.startButton.addEventListener("click", startSession);

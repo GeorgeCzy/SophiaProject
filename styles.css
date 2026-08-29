@@ -203,6 +203,27 @@ h2 {
   margin: 0;
 }
 
+.order-note {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+  border-left: 4px solid var(--strong-2);
+  background: var(--panel-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.order-note strong {
+  color: #1f4b43;
+  font-size: 14px;
+}
+
+.order-note span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .resume-panel {
   display: flex;
   align-items: center;
