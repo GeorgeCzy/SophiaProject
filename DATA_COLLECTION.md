@@ -35,3 +35,8 @@ The participant sees only the public study label, such as `Sophia Study A` or
 When new columns are added to `collector/google-apps-script.js`, paste the
 updated script into Apps Script and redeploy the Web app so Google Sheets stores
 the new fields.
+
+The extra multi-study fields are appended after `completed_at`, so in Google
+Sheets they appear near the right side of the response table. Existing rows from
+older submissions will not be backfilled automatically; new submissions after
+redeployment will include those values.

@@ -55,6 +55,8 @@ function doPost(event) {
 }
 
 function doGet() {
+  const sheet = getResponseSheet();
+  ensureHeaders(sheet);
   return jsonResponse({ ok: true, sheet: SHEET_NAME, headers: HEADERS.length });
 }
 
