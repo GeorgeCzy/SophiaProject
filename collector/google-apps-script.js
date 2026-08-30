@@ -1,3 +1,4 @@
+const SPREADSHEET_ID = "1YolTxn3pPpkXveJAuRzRd-opewVickylJRmsbmTvhd4";
 const SHEET_NAME = "responses";
 
 const HEADERS = [
@@ -29,31 +30,49 @@ const HEADERS = [
 ];
 
 function doPost(event) {
-  const payload = JSON.parse(event.postData.contents || "{}");
-  const sheet = getResponseSheet();
-  ensureHeaders(sheet);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
 
-  const rows = (payload.rows || []).map((row) =>
-    HEADERS.map((header) => row[header] ?? ""),
-  );
+  try {
+    const payload = parsePayload(event);
+    const sheet = getResponseSheet();
+    ensureHeaders(sheet);
 
-  if (rows.length) {
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+    const rows = (payload.rows || []).map((row) =>
+      HEADERS.map((header) => normalizeCellValue(row[header])),
+    );
+
+    if (rows.length) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+    }
+
+    return jsonResponse({ ok: true, rows: rows.length });
+  } catch (error) {
+    return jsonResponse({ ok: false, error: String(error && error.message ? error.message : error) });
+  } finally {
+    lock.releaseLock();
   }
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, rows: rows.length }))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet() {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return jsonResponse({ ok: true, sheet: SHEET_NAME, headers: HEADERS.length });
+}
+
+function parsePayload(event) {
+  const contents = event && event.postData && event.postData.contents
+    ? event.postData.contents
+    : "{}";
+  return JSON.parse(contents);
+}
+
+function normalizeCellValue(value) {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+  return value;
 }
 
 function getResponseSheet() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   return spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
 }
 
@@ -64,4 +83,13 @@ function ensureHeaders(sheet) {
   if (!hasHeaders) {
     range.setValues([HEADERS]);
   }
+  if (sheet.getFrozenRows() < 1) {
+    sheet.setFrozenRows(1);
+  }
+}
+
+function jsonResponse(payload) {
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
 }
