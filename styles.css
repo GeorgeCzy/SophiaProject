@@ -224,6 +224,17 @@ h2 {
   font-weight: 650;
 }
 
+.load-error {
+  margin-top: 14px;
+  border: 1px solid #e1c7bd;
+  border-radius: 8px;
+  background: #fff8f5;
+  color: #7c351c;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .resume-panel {
   display: flex;
   align-items: center;

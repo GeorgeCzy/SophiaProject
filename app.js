@@ -1,9 +1,18 @@
-const STORAGE_KEY = "sophia-public-rating-session-v3";
+const DEFAULT_EXPERIMENT_ID = "complete";
+const STORAGE_KEY_PREFIX = "sophia-public-rating-session-v4";
 const ratingValues = [1, 2, 3, 4, 5];
 const config = {
   submitEndpoint: "",
   submitMode: "no-cors",
   ...(window.SOPHIA_RATING_CONFIG || {}),
+};
+const fallbackExperiment = {
+  id: DEFAULT_EXPERIMENT_ID,
+  publicLabel: "Sophia Study A",
+  condition: "complete",
+  stimulusSet: "daily-dialogue-40",
+  manifest: "/manifests/complete.json",
+  enabled: true,
 };
 
 const criteria = [
@@ -45,6 +54,12 @@ const criteria = [
 ];
 
 const state = {
+  experiments: [],
+  experiment: fallbackExperiment,
+  experimentId: DEFAULT_EXPERIMENT_ID,
+  experimentLabel: fallbackExperiment.publicLabel,
+  condition: fallbackExperiment.condition,
+  stimulusSet: fallbackExperiment.stimulusSet,
   clips: [],
   participantId: "",
   sessionLabel: "",
@@ -55,17 +70,21 @@ const state = {
   ratings: {},
   videoErrors: {},
   startedAt: "",
+  orderSeed: "",
   resumeAvailable: false,
   submitting: false,
   submitStatus: "",
+  loadError: "",
 };
 
 const elements = {
   setupScreen: document.querySelector("#setupScreen"),
   ratingApp: document.querySelector("#ratingApp"),
+  studyLabels: document.querySelectorAll("[data-study-label]"),
   participantInput: document.querySelector("#participantInput"),
   sessionInput: document.querySelector("#sessionInput"),
   randomizeInput: document.querySelector("#randomizeInput"),
+  loadError: document.querySelector("#loadError"),
   resumePanel: document.querySelector("#resumePanel"),
   resumeSummary: document.querySelector("#resumeSummary"),
   resumeButton: document.querySelector("#resumeButton"),
@@ -104,6 +123,26 @@ function resolveAsset(src) {
   if (/^https?:\/\//i.test(src)) return src;
   if (src.startsWith("/")) return `${getBasePath()}${src.slice(1)}`;
   return src;
+}
+
+function getRequestedExperimentId() {
+  const params = new URLSearchParams(window.location.search);
+  return (params.get("experiment") || DEFAULT_EXPERIMENT_ID).trim() || DEFAULT_EXPERIMENT_ID;
+}
+
+function getStorageKey() {
+  return `${STORAGE_KEY_PREFIX}:${state.experimentId}`;
+}
+
+function normalizeExperiment(experiment) {
+  return {
+    ...fallbackExperiment,
+    ...experiment,
+    publicLabel: experiment.publicLabel || experiment.label || fallbackExperiment.publicLabel,
+    condition: experiment.condition || experiment.id || fallbackExperiment.condition,
+    stimulusSet: experiment.stimulusSet || fallbackExperiment.stimulusSet,
+    enabled: experiment.enabled !== false,
+  };
 }
 
 function fallbackClips() {
@@ -190,14 +229,19 @@ function csvEscape(value) {
 
 function saveSession() {
   window.localStorage.setItem(
-    STORAGE_KEY,
+    getStorageKey(),
     JSON.stringify({
+      experimentId: state.experimentId,
+      experimentLabel: state.experimentLabel,
+      condition: state.condition,
+      stimulusSet: state.stimulusSet,
       participantId: state.participantId,
       sessionLabel: state.sessionLabel,
       randomizeOrder: state.randomizeOrder,
       started: state.started,
       currentIndex: state.currentIndex,
       order: state.order,
+      orderSeed: state.orderSeed,
       ratings: state.ratings,
       startedAt: state.startedAt,
     }),
@@ -205,23 +249,25 @@ function saveSession() {
 }
 
 function restoreSession() {
-  const saved = window.localStorage.getItem(STORAGE_KEY);
+  const saved = window.localStorage.getItem(getStorageKey());
   if (!saved) return;
   try {
     const parsed = JSON.parse(saved);
+    if (parsed.experimentId && parsed.experimentId !== state.experimentId) return;
     state.participantId = parsed.participantId || "";
     state.sessionLabel = parsed.sessionLabel || "";
     state.randomizeOrder = parsed.randomizeOrder ?? true;
     state.started = false;
     state.currentIndex = parsed.currentIndex || 0;
     state.order = Array.isArray(parsed.order) ? parsed.order : [];
+    state.orderSeed = parsed.orderSeed || "";
     state.ratings = parsed.ratings || {};
     state.startedAt = parsed.startedAt || "";
     state.resumeAvailable = Boolean(
       parsed.started || parsed.startedAt || Object.keys(state.ratings).length,
     );
   } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(getStorageKey());
   }
 }
 
@@ -293,11 +339,21 @@ function render() {
   const attempted = attemptedCount();
   const resumeVisible = state.resumeAvailable && (Boolean(state.startedAt) || attempted > 0);
 
-  elements.videoCountLabel.textContent = `${state.clips.length} videos`;
+  elements.studyLabels.forEach((label) => {
+    label.textContent = state.experimentLabel;
+  });
+  elements.videoCountLabel.textContent = state.loadError
+    ? "Study version unavailable"
+    : `${state.clips.length} videos`;
+  elements.startButton.disabled = Boolean(state.loadError) || state.clips.length === 0;
   elements.participantInput.value = state.participantId;
   elements.sessionInput.value = state.sessionLabel;
   if (elements.randomizeInput) {
     elements.randomizeInput.checked = true;
+  }
+  if (elements.loadError) {
+    elements.loadError.hidden = !state.loadError;
+    elements.loadError.textContent = state.loadError;
   }
   if (elements.resumePanel) {
     elements.resumePanel.hidden = !resumeVisible;
@@ -373,6 +429,7 @@ function render() {
 }
 
 function startSession() {
+  if (state.loadError || !state.clips.length) return;
   const id = elements.participantInput.value.trim() || `P-${String(Date.now()).slice(-6)}`;
   state.participantId = id;
   state.sessionLabel = elements.sessionInput.value.trim();
@@ -381,9 +438,10 @@ function startSession() {
   state.videoErrors = {};
   state.resumeAvailable = false;
   state.submitStatus = "";
+  state.orderSeed = `${state.experimentId}:${id}`;
   state.order = makePresentationOrder(
     state.clips.map((clip) => clip.id),
-    id,
+    state.orderSeed,
   );
   state.currentIndex = 0;
   state.started = true;
@@ -436,6 +494,11 @@ function getCsvHeader() {
     "playback_issue",
     "comment",
     "completed_at",
+    "experiment_id",
+    "experiment_label",
+    "stimulus_set",
+    "order_seed",
+    "dialogue_id",
   ];
 }
 
@@ -460,6 +523,11 @@ function buildExportRows(exportedAt = new Date().toISOString()) {
         rating.playbackIssue || false,
         rating.comment,
         rating.completedAt,
+        state.experimentId,
+        state.experimentLabel,
+        state.stimulusSet,
+        state.orderSeed,
+        clip.id,
       ];
     });
 }
@@ -536,7 +604,7 @@ async function submitResponses() {
 function resetSession() {
   const confirmed = window.confirm("Clear this browser's current rating session?");
   if (!confirmed) return;
-  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(getStorageKey());
   state.participantId = "";
   state.sessionLabel = "";
   state.randomizeOrder = true;
@@ -546,21 +614,68 @@ function resetSession() {
   state.ratings = {};
   state.videoErrors = {};
   state.startedAt = "";
+  state.orderSeed = "";
   state.resumeAvailable = false;
   state.submitStatus = "";
   render();
 }
 
-async function loadClips() {
+async function loadExperiment() {
+  const requestedId = getRequestedExperimentId();
+  state.experimentId = requestedId;
+  state.loadError = "";
+
   try {
-    const response = await fetch(resolveAsset("/video-manifest.json"), { cache: "no-store" });
-    if (!response.ok) throw new Error(`Manifest request failed: ${response.status}`);
-    state.clips = await response.json();
+    const response = await fetch(resolveAsset("/experiments.json"), { cache: "no-store" });
+    if (!response.ok) throw new Error(`Experiment request failed: ${response.status}`);
+    const experiments = await response.json();
+    state.experiments = experiments.map(normalizeExperiment);
   } catch {
-    state.clips = fallbackClips();
+    state.experiments = [fallbackExperiment];
   }
-  if (!state.order.length) {
-    state.order = state.clips.map((clip) => clip.id);
+
+  const selected = state.experiments.find((experiment) => experiment.id === requestedId);
+  if (!selected) {
+    state.experiment = normalizeExperiment({ id: requestedId, enabled: false });
+    state.experimentLabel = "Sophia Study";
+    state.condition = requestedId;
+    state.stimulusSet = fallbackExperiment.stimulusSet;
+    state.loadError = "This study version is not available. Please check the study link.";
+    return;
+  }
+
+  state.experiment = normalizeExperiment(selected);
+  state.experimentLabel = state.experiment.publicLabel;
+  state.condition = state.experiment.condition;
+  state.stimulusSet = state.experiment.stimulusSet;
+  if (!state.experiment.enabled) {
+    state.loadError =
+      state.experiment.message || "This study version is not ready yet. Please check the study link.";
+  }
+}
+
+async function loadClips() {
+  if (state.loadError) return;
+
+  try {
+    const response = await fetch(resolveAsset(state.experiment.manifest), { cache: "no-store" });
+    if (!response.ok) throw new Error(`Manifest request failed: ${response.status}`);
+    const clips = await response.json();
+    state.clips = clips.map((clip) => ({
+      ...clip,
+      condition: state.condition,
+      stimulusSet: state.stimulusSet,
+    }));
+  } catch {
+    state.clips = [];
+    state.loadError = "This study version could not load. Please check the study link.";
+  }
+  const clipIds = state.clips.map((clip) => clip.id);
+  const clipIdSet = new Set(clipIds);
+  const orderStillValid =
+    state.order.length === clipIds.length && state.order.every((id) => clipIdSet.has(id));
+  if (!orderStillValid) {
+    state.order = clipIds;
   }
 }
 
@@ -614,6 +729,7 @@ function bindEvents() {
 async function init() {
   renderCriterionPreview();
   renderRatingControls();
+  await loadExperiment();
   restoreSession();
   await loadClips();
   bindEvents();

@@ -21,6 +21,11 @@ const HEADERS = [
   "playback_issue",
   "comment",
   "completed_at",
+  "experiment_id",
+  "experiment_label",
+  "stimulus_set",
+  "order_seed",
+  "dialogue_id",
 ];
 
 function doPost(event) {

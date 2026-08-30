@@ -1,5 +1,10 @@
-This folder contains the 40 study videos used by the rating website.
+This folder contains the study videos used by the rating website.
 
-The current video manifest maps the 40 dialogue stimuli to the uploaded
-`IMG_*.MOV` files in filename order. If the video filenames change, update
-`video-manifest.json` so each item points to the correct clip.
+Use one subfolder per experiment version:
+
+- `complete/`: the current full-system version.
+- `single-llm/`: the single-LLM version once its videos are added.
+
+Each experiment version has its own manifest in `../manifests/`. If video
+filenames change, update that experiment's manifest so each item points to the
+correct clip.

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "complete",
+    "publicLabel": "Sophia Study A",
+    "condition": "complete",
+    "stimulusSet": "daily-dialogue-40",
+    "manifest": "/manifests/complete.json",
+    "enabled": true
+  },
+  {
+    "id": "single-llm",
+    "publicLabel": "Sophia Study B",
+    "condition": "single-llm",
+    "stimulusSet": "daily-dialogue-40",
+    "manifest": "/manifests/single-llm.json",
+    "enabled": false,
+    "message": "This study version is not ready yet. Please check the study link."
+  }
+]

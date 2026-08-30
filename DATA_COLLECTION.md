@@ -15,3 +15,19 @@ Recommended setup:
 
 After `submitEndpoint` is configured, the public page shows a Submit Online
 button. Participants can still export CSV as a backup.
+
+## Multiple study versions
+
+The site can host multiple experiment versions with the same rating criteria.
+Use URL parameters to assign participants to a version:
+
+- Complete version: `?experiment=complete`
+- Single-LLM version: `?experiment=single-llm`
+
+The participant sees only the public study label, such as `Sophia Study A` or
+`Sophia Study B`. The exported and submitted data include `condition`,
+`experiment_id`, `stimulus_set`, `order_seed`, and `dialogue_id` for analysis.
+
+When new columns are added to `collector/google-apps-script.js`, paste the
+updated script into Apps Script and redeploy the Web app so Google Sheets stores
+the new fields.
