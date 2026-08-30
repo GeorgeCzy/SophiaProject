@@ -81,6 +81,7 @@ const elements = {
   setupScreen: document.querySelector("#setupScreen"),
   ratingApp: document.querySelector("#ratingApp"),
   studyLabels: document.querySelectorAll("[data-study-label]"),
+  studySwitcher: document.querySelector("#studySwitcher"),
   participantInput: document.querySelector("#participantInput"),
   sessionInput: document.querySelector("#sessionInput"),
   randomizeInput: document.querySelector("#randomizeInput"),
@@ -128,6 +129,13 @@ function resolveAsset(src) {
 function getRequestedExperimentId() {
   const params = new URLSearchParams(window.location.search);
   return (params.get("experiment") || DEFAULT_EXPERIMENT_ID).trim() || DEFAULT_EXPERIMENT_ID;
+}
+
+function switchExperiment(experimentId) {
+  if (!experimentId || experimentId === state.experimentId) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set("experiment", experimentId);
+  window.location.assign(url.toString());
 }
 
 function getStorageKey() {
@@ -280,6 +288,23 @@ function renderCriterionPreview() {
   });
 }
 
+function renderExperimentSwitcher() {
+  if (!elements.studySwitcher) return;
+  const experiments = state.experiments.length ? state.experiments : [state.experiment];
+  elements.studySwitcher.innerHTML = "";
+  experiments.forEach((experiment) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "study-switch-option";
+    button.textContent = experiment.publicLabel || experiment.id;
+    button.classList.toggle("active", experiment.id === state.experimentId);
+    button.disabled = experiment.enabled === false;
+    button.setAttribute("aria-pressed", experiment.id === state.experimentId ? "true" : "false");
+    button.addEventListener("click", () => switchExperiment(experiment.id));
+    elements.studySwitcher.appendChild(button);
+  });
+}
+
 function renderRatingControls() {
   elements.ratingList.innerHTML = "";
   criteria.forEach((criterion) => {
@@ -348,6 +373,8 @@ function render() {
   elements.startButton.disabled = Boolean(state.loadError) || state.clips.length === 0;
   elements.participantInput.value = state.participantId;
   elements.sessionInput.value = state.sessionLabel;
+  elements.sessionInput.placeholder = state.experimentId;
+  renderExperimentSwitcher();
   if (elements.randomizeInput) {
     elements.randomizeInput.checked = true;
   }

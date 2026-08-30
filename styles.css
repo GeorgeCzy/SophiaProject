@@ -153,6 +153,60 @@ h2 {
   gap: 16px;
 }
 
+.study-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  border: 1px solid #dce4dc;
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 10px;
+}
+
+.study-switcher > span {
+  padding-left: 4px;
+  color: #293039;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.study-switcher-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 6px;
+  min-width: min(420px, 100%);
+}
+
+.study-switch-option {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #465057;
+  cursor: pointer;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.study-switch-option:hover {
+  border-color: #bdd2cc;
+  background: #f0f6f3;
+}
+
+.study-switch-option.active {
+  border-color: var(--strong);
+  background: var(--strong);
+  color: white;
+}
+
+.study-switch-option:disabled:not(.active) {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .input-group,
 .notes-box {
   display: grid;
@@ -638,6 +692,7 @@ h2 {
   .topbar,
   .clip-heading,
   .setup-actions,
+  .study-switcher,
   .resume-panel,
   .action-bar,
   .intro-grid {
@@ -663,6 +718,11 @@ h2 {
   .rating-scale {
     grid-template-columns: repeat(5, minmax(42px, 1fr));
     gap: 5px;
+  }
+
+  .study-switcher-options {
+    grid-template-columns: 1fr;
+    min-width: 0;
   }
 
   .action-bar .primary-button,
