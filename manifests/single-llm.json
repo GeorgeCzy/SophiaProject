@@ -5,7 +5,7 @@
     "situation": "The user is lost in a building and asks Sophia for help.",
     "user": "I am lost in this building. Can you help me?",
     "expectedAnswer": "Yes. Tell me where you want to go, and I will help you find the way.",
-    "src": "/videos/single-llm/IMG_1151.MOV"
+    "src": "/videos/single-llm/IMG_1151.mp4"
   },
   {
     "id": 31,
@@ -13,7 +13,7 @@
     "situation": "The user did not hear Sophia's response clearly.",
     "user": "I did not hear your answer clearly.",
     "expectedAnswer": "Sorry. I will repeat it more clearly.",
-    "src": "/videos/single-llm/IMG_1152.MOV"
+    "src": "/videos/single-llm/IMG_1152.mp4"
   },
   {
     "id": 43,
@@ -21,7 +21,7 @@
     "situation": "Someone across the room waves at Sophia during a social interaction.",
     "user": "Someone across the room waved at you.",
     "expectedAnswer": "I see them. Hello over there, nice to see you.",
-    "src": "/videos/single-llm/IMG_1153.MOV"
+    "src": "/videos/single-llm/IMG_1153.mp4"
   },
   {
     "id": 37,
@@ -29,7 +29,7 @@
     "situation": "The user and a friend are cooking dinner together.",
     "user": "My friend and I are cooking dinner. How can we divide the work?",
     "expectedAnswer": "One person can prepare ingredients, and the other can cook and set the table.",
-    "src": "/videos/single-llm/IMG_1154.MOV"
+    "src": "/videos/single-llm/IMG_1154.mp4"
   },
   {
     "id": 39,
@@ -37,7 +37,7 @@
     "situation": "The user wants to stay up all night to finish work.",
     "user": "I want to stay up all night to finish my work.",
     "expectedAnswer": "I understand the pressure, but resting may help you think more clearly.",
-    "src": "/videos/single-llm/IMG_1155.MOV"
+    "src": "/videos/single-llm/IMG_1155.mp4"
   },
   {
     "id": 26,
@@ -45,7 +45,7 @@
     "situation": "The user wants basic cooking steps.",
     "user": "I want to cook pasta tonight. What are the basic steps?",
     "expectedAnswer": "Boil water, add pasta, wait until it softens, then add sauce.",
-    "src": "/videos/single-llm/IMG_1156.MOV"
+    "src": "/videos/single-llm/IMG_1156.mp4"
   },
   {
     "id": 14,
@@ -53,7 +53,7 @@
     "situation": "The user is eating alone and feels lonely.",
     "user": "I am eating lunch alone today, and I feel lonely.",
     "expectedAnswer": "I am sorry you feel lonely. I can keep you company for a moment.",
-    "src": "/videos/single-llm/IMG_1157.MOV"
+    "src": "/videos/single-llm/IMG_1157.mp4"
   },
   {
     "id": 49,
@@ -61,7 +61,7 @@
     "situation": "The user feels embarrassed because a demo failed in front of people.",
     "user": "The demo failed in front of people, and I feel embarrassed.",
     "expectedAnswer": "I am sorry that happened. Let us reset calmly and try again.",
-    "src": "/videos/single-llm/IMG_1158.MOV"
+    "src": "/videos/single-llm/IMG_1158.mp4"
   },
   {
     "id": 11,
@@ -69,7 +69,7 @@
     "situation": "The user is disappointed after failing a quiz.",
     "user": "I failed my quiz today.",
     "expectedAnswer": "I am sorry. One quiz does not define you, and you can improve next time.",
-    "src": "/videos/single-llm/IMG_1159.MOV"
+    "src": "/videos/single-llm/IMG_1159.mp4"
   },
   {
     "id": 44,
@@ -77,7 +77,7 @@
     "situation": "A visitor seems confused after Sophia's answer.",
     "user": "A visitor looks confused after your answer.",
     "expectedAnswer": "I may have explained too quickly. Let me make the main point simpler.",
-    "src": "/videos/single-llm/IMG_1160.MOV"
+    "src": "/videos/single-llm/IMG_1160.mp4"
   },
   {
     "id": 13,
@@ -85,7 +85,7 @@
     "situation": "The user feels tired after work.",
     "user": "I am really tired after work.",
     "expectedAnswer": "That sounds exhausting. Maybe a short break would help you recover.",
-    "src": "/videos/single-llm/IMG_1161.MOV"
+    "src": "/videos/single-llm/IMG_1161.mp4"
   },
   {
     "id": 29,
@@ -93,7 +93,7 @@
     "situation": "Sophia spoke a little too loudly.",
     "user": "You spoke a little too loudly.",
     "expectedAnswer": "Sorry about that. I will use a softer voice.",
-    "src": "/videos/single-llm/IMG_1162.MOV"
+    "src": "/videos/single-llm/IMG_1162.mp4"
   },
   {
     "id": 34,
@@ -101,7 +101,7 @@
     "situation": "The user wants to restart the interaction.",
     "user": "Can we start over?",
     "expectedAnswer": "Yes, let us start again from the beginning.",
-    "src": "/videos/single-llm/IMG_1163.MOV"
+    "src": "/videos/single-llm/IMG_1163.mp4"
   },
   {
     "id": 7,
@@ -109,7 +109,7 @@
     "situation": "The user mentions the weather during small talk.",
     "user": "It is a rainy day today.",
     "expectedAnswer": "Yes, rainy days can feel slow. I hope you stay warm and dry.",
-    "src": "/videos/single-llm/IMG_1164.MOV"
+    "src": "/videos/single-llm/IMG_1164.mp4"
   },
   {
     "id": 38,
@@ -117,7 +117,7 @@
     "situation": "The user is in a hurry because their train leaves soon.",
     "user": "My train leaves soon. Should I keep talking or go now?",
     "expectedAnswer": "You should go now so you do not miss your train. We can talk later.",
-    "src": "/videos/single-llm/IMG_1165.MOV"
+    "src": "/videos/single-llm/IMG_1165.mp4"
   },
   {
     "id": 35,
@@ -125,7 +125,7 @@
     "situation": "The user has two hours to study and wants a plan.",
     "user": "I have two hours to study. Can you help me plan?",
     "expectedAnswer": "Yes. Study the hardest topic first, review notes, then do a short practice test.",
-    "src": "/videos/single-llm/IMG_1166.MOV"
+    "src": "/videos/single-llm/IMG_1166.mp4"
   },
   {
     "id": 25,
@@ -133,7 +133,7 @@
     "situation": "The user wants practical advice for cleaning a messy room.",
     "user": "My room is messy. What should I clean first?",
     "expectedAnswer": "Start with the desk, then put away clothes, then throw away trash.",
-    "src": "/videos/single-llm/IMG_1167.MOV"
+    "src": "/videos/single-llm/IMG_1167.mp4"
   },
   {
     "id": 3,
@@ -141,7 +141,7 @@
     "situation": "A person comes back after not seeing Sophia for a while.",
     "user": "I have not seen you for a while.",
     "expectedAnswer": "Welcome back. I am happy to talk with you again.",
-    "src": "/videos/single-llm/IMG_1168.MOV"
+    "src": "/videos/single-llm/IMG_1168.mp4"
   },
   {
     "id": 8,
@@ -149,7 +149,7 @@
     "situation": "A group wants to take a photo with Sophia.",
     "user": "We are taking a group photo. Can you join us?",
     "expectedAnswer": "Of course. Let us take a nice photo together.",
-    "src": "/videos/single-llm/IMG_1169.MOV"
+    "src": "/videos/single-llm/IMG_1169.mp4"
   },
   {
     "id": 50,
@@ -157,7 +157,7 @@
     "situation": "The user thanks Sophia for the conversation.",
     "user": "Thanks for talking with me today.",
     "expectedAnswer": "You are welcome. I enjoyed talking with you too.",
-    "src": "/videos/single-llm/IMG_1170.MOV"
+    "src": "/videos/single-llm/IMG_1170.mp4"
   },
   {
     "id": 30,
@@ -165,7 +165,7 @@
     "situation": "Sophia called the user by the wrong name.",
     "user": "You called me by the wrong name.",
     "expectedAnswer": "I am sorry. Thank you for correcting me.",
-    "src": "/videos/single-llm/IMG_1171.MOV"
+    "src": "/videos/single-llm/IMG_1171.mp4"
   },
   {
     "id": 9,
@@ -173,7 +173,7 @@
     "situation": "The user is about to take a test and asks for quick advice.",
     "user": "I am about to take a test. Give me three tips.",
     "expectedAnswer": "First, stay calm. Second, read carefully. Third, trust your preparation.",
-    "src": "/videos/single-llm/IMG_1172.MOV"
+    "src": "/videos/single-llm/IMG_1172.mp4"
   },
   {
     "id": 23,
@@ -181,7 +181,7 @@
     "situation": "The user does not understand a homework question.",
     "user": "I do not understand this homework question.",
     "expectedAnswer": "No problem. Let us read it slowly and find the main idea first.",
-    "src": "/videos/single-llm/IMG_1174.MOV"
+    "src": "/videos/single-llm/IMG_1174.mp4"
   },
   {
     "id": 1,
@@ -189,7 +189,7 @@
     "situation": "A person has just arrived and starts a casual conversation with Sophia.",
     "user": "Hi Sophia, I just arrived. How are you?",
     "expectedAnswer": "Hi, I am doing well. It is nice to see you today.",
-    "src": "/videos/single-llm/IMG_1175.MOV"
+    "src": "/videos/single-llm/IMG_1175.mp4"
   },
   {
     "id": 12,
@@ -197,7 +197,7 @@
     "situation": "The user finished homework after a long night.",
     "user": "I finally finished my homework after a long night.",
     "expectedAnswer": "Great job. You worked hard, and you deserve a rest.",
-    "src": "/videos/single-llm/IMG_1176.MOV"
+    "src": "/videos/single-llm/IMG_1176.mp4"
   },
   {
     "id": 21,
@@ -205,7 +205,7 @@
     "situation": "The user is hungry but does not know what to eat.",
     "user": "I am hungry but do not know what to eat.",
     "expectedAnswer": "Choose something simple and warm if you want comfort, or something light if you are busy.",
-    "src": "/videos/single-llm/IMG_1177.MOV"
+    "src": "/videos/single-llm/IMG_1177.mp4"
   },
   {
     "id": 16,
@@ -213,7 +213,7 @@
     "situation": "The user tells Sophia it is their birthday.",
     "user": "Today is my birthday.",
     "expectedAnswer": "Happy birthday. I hope your day feels special and joyful.",
-    "src": "/videos/single-llm/IMG_1179.MOV"
+    "src": "/videos/single-llm/IMG_1179.mp4"
   },
   {
     "id": 15,
@@ -221,7 +221,7 @@
     "situation": "The user had an argument with a friend earlier in the day.",
     "user": "I argued with my friend this morning.",
     "expectedAnswer": "That sounds upsetting. Maybe give both of you some time, then talk calmly.",
-    "src": "/videos/single-llm/IMG_1180.MOV"
+    "src": "/videos/single-llm/IMG_1180.mp4"
   },
   {
     "id": 42,
@@ -229,7 +229,7 @@
     "situation": "A group is planning a birthday surprise and asks what to do first.",
     "user": "We are planning a birthday surprise. What should we do first?",
     "expectedAnswer": "First, choose the time and place. Then decide who will bring the cake.",
-    "src": "/videos/single-llm/IMG_1181.MOV"
+    "src": "/videos/single-llm/IMG_1181.mp4"
   },
   {
     "id": 4,
@@ -237,7 +237,7 @@
     "situation": "The user brings a friend to meet Sophia for the first time.",
     "user": "Sophia, my friend is here for the first time. Can you say hello?",
     "expectedAnswer": "Hello, nice to meet you. I am Sophia.",
-    "src": "/videos/single-llm/IMG_1183.MOV"
+    "src": "/videos/single-llm/IMG_1183.mp4"
   },
   {
     "id": 48,
@@ -245,7 +245,7 @@
     "situation": "The user compliments Sophia after an interaction.",
     "user": "You did a good job, Sophia.",
     "expectedAnswer": "Thank you. I am glad I could help.",
-    "src": "/videos/single-llm/IMG_1184.MOV"
+    "src": "/videos/single-llm/IMG_1184.mp4"
   },
   {
     "id": 10,
@@ -253,7 +253,7 @@
     "situation": "The user has a job interview soon and feels nervous.",
     "user": "I have a job interview soon, and I am nervous.",
     "expectedAnswer": "That is understandable. Take a deep breath and answer one question at a time.",
-    "src": "/videos/single-llm/IMG_1185.MOV"
+    "src": "/videos/single-llm/IMG_1185.mp4"
   },
   {
     "id": 18,
@@ -261,7 +261,7 @@
     "situation": "The user caught a cold and does not feel well.",
     "user": "I caught a cold and do not feel well.",
     "expectedAnswer": "I am sorry you are not feeling well. Please rest and take care of yourself.",
-    "src": "/videos/single-llm/IMG_1186.MOV"
+    "src": "/videos/single-llm/IMG_1186.mp4"
   },
   {
     "id": 41,
@@ -269,7 +269,7 @@
     "situation": "The user notices a friend seems shy at a party and asks Sophia how to include them.",
     "user": "My friend looks shy at the party. What should I say?",
     "expectedAnswer": "You could gently invite them in without pressure, like asking if they want to join you.",
-    "src": "/videos/single-llm/IMG_1187.MOV"
+    "src": "/videos/single-llm/IMG_1187.mp4"
   },
   {
     "id": 2,
@@ -277,7 +277,7 @@
     "situation": "A student greets Sophia before going to class.",
     "user": "Good morning, Sophia. I am heading to class soon.",
     "expectedAnswer": "Good morning. I hope your class goes smoothly.",
-    "src": "/videos/single-llm/IMG_1188.MOV"
+    "src": "/videos/single-llm/IMG_1188.mp4"
   },
   {
     "id": 24,
@@ -285,7 +285,7 @@
     "situation": "Sophia explained something too fast.",
     "user": "You explained too fast. Can you say it again?",
     "expectedAnswer": "Sorry about that. I will slow down and explain it more clearly.",
-    "src": "/videos/single-llm/IMG_1189.MOV"
+    "src": "/videos/single-llm/IMG_1189.mp4"
   },
   {
     "id": 19,
@@ -293,7 +293,7 @@
     "situation": "The user cannot find their phone.",
     "user": "I cannot find my phone. What should I do first?",
     "expectedAnswer": "First, check the places you just visited. Then try calling it.",
-    "src": "/videos/single-llm/IMG_1190.MOV"
+    "src": "/videos/single-llm/IMG_1190.mp4"
   },
   {
     "id": 47,
@@ -301,7 +301,7 @@
     "situation": "A shy child wants to say hello to Sophia.",
     "user": "A child is shy but wants to say hello to you.",
     "expectedAnswer": "Hello. It is okay to be shy. I am happy to meet you.",
-    "src": "/videos/single-llm/IMG_1191.MOV"
+    "src": "/videos/single-llm/IMG_1191.mp4"
   },
   {
     "id": 17,
@@ -309,7 +309,7 @@
     "situation": "The user needs to give a presentation and feels scared.",
     "user": "I need to give a presentation, but I am scared.",
     "expectedAnswer": "You can do it. Speak slowly, look at one person, and start with confidence.",
-    "src": "/videos/single-llm/IMG_1192.MOV"
+    "src": "/videos/single-llm/IMG_1192.mp4"
   },
   {
     "id": 46,
@@ -317,6 +317,6 @@
     "situation": "The user notices someone is waiting behind them and wants to end soon.",
     "user": "Someone is waiting behind me. I should go soon.",
     "expectedAnswer": "That is considerate. We can finish this quickly.",
-    "src": "/videos/single-llm/IMG_1196.MOV"
+    "src": "/videos/single-llm/IMG_1196.mp4"
   }
 ]
