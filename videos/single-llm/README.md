@@ -1,5 +1,4 @@
-Place the 40 single-llm study videos in this folder.
+This folder contains the 40 videos for the single-LLM ablation version.
 
-After the files are added, generate `manifests/single-llm.json` with the same
-dialogue IDs as the complete version and update `experiments.json` so
-`single-llm` has `"enabled": true`.
+The displayed situation and user utterance are defined in
+`../../manifests/single-llm.json`.

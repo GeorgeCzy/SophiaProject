@@ -13,7 +13,6 @@
     "condition": "single-llm",
     "stimulusSet": "daily-dialogue-40",
     "manifest": "/manifests/single-llm.json",
-    "enabled": false,
-    "message": "This study version is not ready yet. Please check the study link."
+    "enabled": true
   }
 ]
