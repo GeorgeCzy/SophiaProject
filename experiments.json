@@ -14,5 +14,21 @@
     "stimulusSet": "daily-dialogue-40",
     "manifest": "/manifests/single-llm.json",
     "enabled": true
+  },
+  {
+    "id": "ablation2",
+    "publicLabel": "Sophia Study C",
+    "condition": "ablation2",
+    "stimulusSet": "daily-dialogue-40",
+    "manifest": "/manifests/ablation2.json",
+    "enabled": true
+  },
+  {
+    "id": "ablation3",
+    "publicLabel": "Sophia Study D",
+    "condition": "ablation3",
+    "stimulusSet": "daily-dialogue-40",
+    "manifest": "/manifests/ablation3.json",
+    "enabled": true
   }
 ]

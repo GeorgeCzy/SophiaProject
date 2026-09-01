@@ -196,12 +196,20 @@ function makePresentationOrder(ids, seedText) {
 }
 
 function getOrderedClips() {
-  const byId = new Map(state.clips.map((clip) => [clip.id, clip]));
+  const byId = new Map(state.clips.map((clip) => [getClipId(clip), clip]));
   return state.order.map((id) => byId.get(id)).filter(Boolean);
 }
 
 function getCurrentClip() {
   return getOrderedClips()[state.currentIndex] || state.clips[0];
+}
+
+function getClipId(clip) {
+  return clip?.clipId ?? clip?.id;
+}
+
+function getDialogueId(clip) {
+  return clip?.dialogueId ?? clip?.dialogue_id ?? clip?.id;
 }
 
 function isRatingComplete(rating) {
@@ -223,11 +231,11 @@ function getRatingValue(rating, key) {
 }
 
 function completedCount() {
-  return state.clips.filter((clip) => isRatingComplete(state.ratings[clip.id])).length;
+  return state.clips.filter((clip) => isRatingComplete(state.ratings[getClipId(clip)])).length;
 }
 
 function attemptedCount() {
-  return state.clips.filter((clip) => hasAnyRating(state.ratings[clip.id])).length;
+  return state.clips.filter((clip) => hasAnyRating(state.ratings[getClipId(clip)])).length;
 }
 
 function csvEscape(value) {
@@ -327,8 +335,9 @@ function renderRatingControls() {
       `;
       label.addEventListener("click", () => {
         const clip = getCurrentClip();
-        state.ratings[clip.id] = {
-          ...(state.ratings[clip.id] || {}),
+        const clipId = getClipId(clip);
+        state.ratings[clipId] = {
+          ...(state.ratings[clipId] || {}),
           [criterion.key]: value,
         };
         saveSession();
@@ -347,7 +356,7 @@ function renderDots() {
     dot.type = "button";
     dot.className = "clip-dot";
     if (index === state.currentIndex) dot.classList.add("current");
-    if (isRatingComplete(state.ratings[clip.id])) dot.classList.add("complete");
+    if (isRatingComplete(state.ratings[getClipId(clip)])) dot.classList.add("complete");
     dot.textContent = String(index + 1);
     dot.setAttribute("aria-label", `Open video ${index + 1}`);
     dot.addEventListener("click", () => {
@@ -394,7 +403,8 @@ function render() {
 
   const orderedClips = getOrderedClips();
   const clip = getCurrentClip();
-  const rating = state.ratings[clip.id] || {};
+  const clipId = getClipId(clip);
+  const rating = state.ratings[clipId] || {};
   const progress = state.clips.length ? Math.round((complete / state.clips.length) * 100) : 0;
 
   elements.participantLabel.textContent = state.participantId || "Participant";
@@ -411,7 +421,7 @@ function render() {
     elements.clipVideo.load();
   }
 
-  elements.videoWarning.hidden = !state.videoErrors[clip.id];
+  elements.videoWarning.hidden = !state.videoErrors[clipId];
   elements.videoWarning.textContent = `Video file not found: ${clip.src}`;
   elements.commentInput.value = rating.comment || "";
   elements.playbackIssueInput.checked = Boolean(rating.playbackIssue);
@@ -467,7 +477,7 @@ function startSession() {
   state.submitStatus = "";
   state.orderSeed = `${state.experimentId}:${id}`;
   state.order = makePresentationOrder(
-    state.clips.map((clip) => clip.id),
+    state.clips.map((clip) => getClipId(clip)),
     state.orderSeed,
   );
   state.currentIndex = 0;
@@ -480,7 +490,7 @@ function startSession() {
 function resumeSession() {
   if (!state.resumeAvailable) return;
   if (!state.order.length) {
-    state.order = state.clips.map((clip) => clip.id);
+    state.order = state.clips.map((clip) => getClipId(clip));
   }
   if (!state.startedAt) {
     state.startedAt = new Date().toISOString();
@@ -494,9 +504,10 @@ function resumeSession() {
 function completeCurrent() {
   const orderedClips = getOrderedClips();
   const clip = getCurrentClip();
-  const rating = state.ratings[clip.id] || {};
+  const clipId = getClipId(clip);
+  const rating = state.ratings[clipId] || {};
   if (!isRatingComplete(rating)) return;
-  state.ratings[clip.id] = {
+  state.ratings[clipId] = {
     ...rating,
     completedAt: new Date().toISOString(),
   };
@@ -531,17 +542,19 @@ function getCsvHeader() {
 
 function buildExportRows(exportedAt = new Date().toISOString()) {
   const orderedClips = getOrderedClips();
-  const exportableClips = orderedClips.filter((clip) => hasAnyRating(state.ratings[clip.id]));
+  const exportableClips = orderedClips.filter((clip) => hasAnyRating(state.ratings[getClipId(clip)]));
   return exportableClips.map((clip) => {
-      const rating = state.ratings[clip.id] || {};
-      const orderedIndex = orderedClips.findIndex((orderedClip) => orderedClip.id === clip.id);
+      const clipId = getClipId(clip);
+      const dialogueId = getDialogueId(clip);
+      const rating = state.ratings[clipId] || {};
+      const orderedIndex = orderedClips.findIndex((orderedClip) => getClipId(orderedClip) === clipId);
       return [
         state.participantId,
         state.sessionLabel,
         state.startedAt,
         exportedAt,
         orderedIndex + 1,
-        clip.id,
+        clipId,
         clip.title,
         clip.condition,
         clip.src,
@@ -554,7 +567,7 @@ function buildExportRows(exportedAt = new Date().toISOString()) {
         state.experimentLabel,
         state.stimulusSet,
         state.orderSeed,
-        clip.id,
+        dialogueId,
       ];
     });
 }
@@ -637,7 +650,7 @@ function resetSession() {
   state.randomizeOrder = true;
   state.started = false;
   state.currentIndex = 0;
-  state.order = state.clips.map((clip) => clip.id);
+  state.order = state.clips.map((clip) => getClipId(clip));
   state.ratings = {};
   state.videoErrors = {};
   state.startedAt = "";
@@ -697,7 +710,7 @@ async function loadClips() {
     state.clips = [];
     state.loadError = "This study version could not load. Please check the study link.";
   }
-  const clipIds = state.clips.map((clip) => clip.id);
+  const clipIds = state.clips.map((clip) => getClipId(clip));
   const clipIdSet = new Set(clipIds);
   const orderStillValid =
     state.order.length === clipIds.length && state.order.every((id) => clipIdSet.has(id));
@@ -732,23 +745,25 @@ function bindEvents() {
   elements.saveButton.addEventListener("click", completeCurrent);
   elements.commentInput.addEventListener("input", (event) => {
     const clip = getCurrentClip();
-    state.ratings[clip.id] = {
-      ...(state.ratings[clip.id] || {}),
+    const clipId = getClipId(clip);
+    state.ratings[clipId] = {
+      ...(state.ratings[clipId] || {}),
       comment: event.target.value,
     };
     saveSession();
   });
   elements.playbackIssueInput.addEventListener("change", (event) => {
     const clip = getCurrentClip();
-    state.ratings[clip.id] = {
-      ...(state.ratings[clip.id] || {}),
+    const clipId = getClipId(clip);
+    state.ratings[clipId] = {
+      ...(state.ratings[clipId] || {}),
       playbackIssue: event.target.checked,
     };
     saveSession();
   });
   elements.clipVideo.addEventListener("error", () => {
     const clip = getCurrentClip();
-    state.videoErrors[clip.id] = true;
+    state.videoErrors[getClipId(clip)] = true;
     render();
   });
 }

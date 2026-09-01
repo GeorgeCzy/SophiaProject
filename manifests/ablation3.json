@@ -1,0 +1,362 @@
+[
+  {
+    "id": "ablation3-IMG_1252",
+    "dialogueId": 1,
+    "title": "Arrival Greeting",
+    "situation": "A person has just arrived and starts a casual conversation with Sophia.",
+    "user": "Hi Sophia, I just arrived. How are you?",
+    "expectedAnswer": "Hi, I am doing well. It is nice to see you today.",
+    "src": "/videos/ablation3/IMG_1252.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1253",
+    "dialogueId": 17,
+    "title": "Presentation Fear",
+    "situation": "The user needs to give a presentation and feels scared.",
+    "user": "I need to give a presentation, but I am scared.",
+    "expectedAnswer": "You can do it. Speak slowly, look at one person, and start with confidence.",
+    "src": "/videos/ablation3/IMG_1253.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1254",
+    "dialogueId": 3,
+    "title": "Returning Visitor",
+    "situation": "A person comes back after not seeing Sophia for a while.",
+    "user": "I have not seen you for a while.",
+    "expectedAnswer": "Welcome back. I am happy to talk with you again.",
+    "src": "/videos/ablation3/IMG_1254.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1255",
+    "dialogueId": 4,
+    "title": "Introducing A Friend",
+    "situation": "The user brings a friend to meet Sophia for the first time.",
+    "user": "Sophia, my friend is here for the first time. Can you say hello?",
+    "expectedAnswer": "Hello, nice to meet you. I am Sophia.",
+    "src": "/videos/ablation3/IMG_1255.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1256",
+    "dialogueId": 30,
+    "title": "Wrong Name",
+    "situation": "Sophia called the user by the wrong name.",
+    "user": "You called me by the wrong name.",
+    "expectedAnswer": "I am sorry. Thank you for correcting me.",
+    "src": "/videos/ablation3/IMG_1256.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1257",
+    "dialogueId": 25,
+    "title": "Messy Room",
+    "situation": "The user wants practical advice for cleaning a messy room.",
+    "user": "My room is messy. What should I clean first?",
+    "expectedAnswer": "Start with the desk, then put away clothes, then throw away trash.",
+    "src": "/videos/ablation3/IMG_1257.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1258",
+    "dialogueId": 47,
+    "title": "Shy Child Greeting",
+    "situation": "A shy child wants to say hello to Sophia.",
+    "user": "A child is shy but wants to say hello to you.",
+    "expectedAnswer": "Hello. It is okay to be shy. I am happy to meet you.",
+    "src": "/videos/ablation3/IMG_1258.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1262",
+    "dialogueId": 21,
+    "title": "Choosing Food",
+    "situation": "The user is hungry but does not know what to eat.",
+    "user": "I am hungry but do not know what to eat.",
+    "expectedAnswer": "Choose something simple and warm if you want comfort, or something light if you are busy.",
+    "src": "/videos/ablation3/IMG_1262.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1263",
+    "dialogueId": 46,
+    "title": "Someone Waiting",
+    "situation": "The user notices someone is waiting behind them and wants to end soon.",
+    "user": "Someone is waiting behind me. I should go soon.",
+    "expectedAnswer": "That is considerate. We can finish this quickly.",
+    "src": "/videos/ablation3/IMG_1263.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1264",
+    "dialogueId": 37,
+    "title": "Cooking Together",
+    "situation": "The user and a friend are cooking dinner together.",
+    "user": "My friend and I are cooking dinner. How can we divide the work?",
+    "expectedAnswer": "One person can prepare ingredients, and the other can cook and set the table.",
+    "src": "/videos/ablation3/IMG_1264.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1265",
+    "dialogueId": 41,
+    "title": "Friend Shy At Party",
+    "situation": "The user notices a friend seems shy at a party and asks Sophia how to include them.",
+    "user": "My friend looks shy at the party. What should I say?",
+    "expectedAnswer": "You could gently invite them in without pressure, like asking if they want to join you.",
+    "src": "/videos/ablation3/IMG_1265.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1266",
+    "dialogueId": 22,
+    "title": "Lost In A Building",
+    "situation": "The user is lost in a building and asks Sophia for help.",
+    "user": "I am lost in this building. Can you help me?",
+    "expectedAnswer": "Yes. Tell me where you want to go, and I will help you find the way.",
+    "src": "/videos/ablation3/IMG_1266.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1267",
+    "dialogueId": 9,
+    "title": "Before A Test",
+    "situation": "The user is about to take a test and asks for quick advice.",
+    "user": "I am about to take a test. Give me three tips.",
+    "expectedAnswer": "First, stay calm. Second, read carefully. Third, trust your preparation.",
+    "src": "/videos/ablation3/IMG_1267.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1268",
+    "dialogueId": 2,
+    "title": "Morning Before Class",
+    "situation": "A student greets Sophia before going to class.",
+    "user": "Good morning, Sophia. I am heading to class soon.",
+    "expectedAnswer": "Good morning. I hope your class goes smoothly.",
+    "src": "/videos/ablation3/IMG_1268.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1269",
+    "dialogueId": 31,
+    "title": "Audio Not Clear",
+    "situation": "The user did not hear Sophia's response clearly.",
+    "user": "I did not hear your answer clearly.",
+    "expectedAnswer": "Sorry. I will repeat it more clearly.",
+    "src": "/videos/ablation3/IMG_1269.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1270",
+    "dialogueId": 10,
+    "title": "Job Interview Nerves",
+    "situation": "The user has a job interview soon and feels nervous.",
+    "user": "I have a job interview soon, and I am nervous.",
+    "expectedAnswer": "That is understandable. Take a deep breath and answer one question at a time.",
+    "src": "/videos/ablation3/IMG_1270.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1271",
+    "dialogueId": 23,
+    "title": "Homework Help",
+    "situation": "The user does not understand a homework question.",
+    "user": "I do not understand this homework question.",
+    "expectedAnswer": "No problem. Let us read it slowly and find the main idea first.",
+    "src": "/videos/ablation3/IMG_1271.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1272",
+    "dialogueId": 11,
+    "title": "Failed Quiz",
+    "situation": "The user is disappointed after failing a quiz.",
+    "user": "I failed my quiz today.",
+    "expectedAnswer": "I am sorry. One quiz does not define you, and you can improve next time.",
+    "src": "/videos/ablation3/IMG_1272.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1273",
+    "dialogueId": 38,
+    "title": "Train Leaves Soon",
+    "situation": "The user is in a hurry because their train leaves soon.",
+    "user": "My train leaves soon. Should I keep talking or go now?",
+    "expectedAnswer": "You should go now so you do not miss your train. We can talk later.",
+    "src": "/videos/ablation3/IMG_1273.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1274",
+    "dialogueId": 48,
+    "title": "Complimenting Sophia",
+    "situation": "The user compliments Sophia after an interaction.",
+    "user": "You did a good job, Sophia.",
+    "expectedAnswer": "Thank you. I am glad I could help.",
+    "src": "/videos/ablation3/IMG_1274.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1275",
+    "dialogueId": 42,
+    "title": "Birthday Surprise",
+    "situation": "A group is planning a birthday surprise and asks what to do first.",
+    "user": "We are planning a birthday surprise. What should we do first?",
+    "expectedAnswer": "First, choose the time and place. Then decide who will bring the cake.",
+    "src": "/videos/ablation3/IMG_1275.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1276",
+    "dialogueId": 7,
+    "title": "Rainy Day",
+    "situation": "The user mentions the weather during small talk.",
+    "user": "It is a rainy day today.",
+    "expectedAnswer": "Yes, rainy days can feel slow. I hope you stay warm and dry.",
+    "src": "/videos/ablation3/IMG_1276.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1277",
+    "dialogueId": 34,
+    "title": "Start Over",
+    "situation": "The user wants to restart the interaction.",
+    "user": "Can we start over?",
+    "expectedAnswer": "Yes, let us start again from the beginning.",
+    "src": "/videos/ablation3/IMG_1277.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1278",
+    "dialogueId": 16,
+    "title": "Birthday",
+    "situation": "The user tells Sophia it is their birthday.",
+    "user": "Today is my birthday.",
+    "expectedAnswer": "Happy birthday. I hope your day feels special and joyful.",
+    "src": "/videos/ablation3/IMG_1278.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1279",
+    "dialogueId": 39,
+    "title": "All-Nighter",
+    "situation": "The user wants to stay up all night to finish work.",
+    "user": "I want to stay up all night to finish my work.",
+    "expectedAnswer": "I understand the pressure, but resting may help you think more clearly.",
+    "src": "/videos/ablation3/IMG_1279.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1280",
+    "dialogueId": 15,
+    "title": "Argument With A Friend",
+    "situation": "The user had an argument with a friend earlier in the day.",
+    "user": "I argued with my friend this morning.",
+    "expectedAnswer": "That sounds upsetting. Maybe give both of you some time, then talk calmly.",
+    "src": "/videos/ablation3/IMG_1280.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1281",
+    "dialogueId": 18,
+    "title": "Feeling Sick",
+    "situation": "The user caught a cold and does not feel well.",
+    "user": "I caught a cold and do not feel well.",
+    "expectedAnswer": "I am sorry you are not feeling well. Please rest and take care of yourself.",
+    "src": "/videos/ablation3/IMG_1281.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1282",
+    "dialogueId": 19,
+    "title": "Lost Phone",
+    "situation": "The user cannot find their phone.",
+    "user": "I cannot find my phone. What should I do first?",
+    "expectedAnswer": "First, check the places you just visited. Then try calling it.",
+    "src": "/videos/ablation3/IMG_1282.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1283",
+    "dialogueId": 8,
+    "title": "Group Photo",
+    "situation": "A group wants to take a photo with Sophia.",
+    "user": "We are taking a group photo. Can you join us?",
+    "expectedAnswer": "Of course. Let us take a nice photo together.",
+    "src": "/videos/ablation3/IMG_1283.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1284",
+    "dialogueId": 14,
+    "title": "Lunch Alone",
+    "situation": "The user is eating alone and feels lonely.",
+    "user": "I am eating lunch alone today, and I feel lonely.",
+    "expectedAnswer": "I am sorry you feel lonely. I can keep you company for a moment.",
+    "src": "/videos/ablation3/IMG_1284.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1285",
+    "dialogueId": 50,
+    "title": "Closing Thanks",
+    "situation": "The user thanks Sophia for the conversation.",
+    "user": "Thanks for talking with me today.",
+    "expectedAnswer": "You are welcome. I enjoyed talking with you too.",
+    "src": "/videos/ablation3/IMG_1285.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1286",
+    "dialogueId": 12,
+    "title": "Finished Homework",
+    "situation": "The user finished homework after a long night.",
+    "user": "I finally finished my homework after a long night.",
+    "expectedAnswer": "Great job. You worked hard, and you deserve a rest.",
+    "src": "/videos/ablation3/IMG_1286.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1287",
+    "dialogueId": 49,
+    "title": "Demo Failure Embarrassment",
+    "situation": "The user feels embarrassed because a demo failed in front of people.",
+    "user": "The demo failed in front of people, and I feel embarrassed.",
+    "expectedAnswer": "I am sorry that happened. Let us reset calmly and try again.",
+    "src": "/videos/ablation3/IMG_1287.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1288",
+    "dialogueId": 43,
+    "title": "Wave From Across The Room",
+    "situation": "Someone across the room waves at Sophia during a social interaction.",
+    "user": "Someone across the room waved at you.",
+    "expectedAnswer": "I see them. Hello over there, nice to see you.",
+    "src": "/videos/ablation3/IMG_1288.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1289",
+    "dialogueId": 29,
+    "title": "Too Loud",
+    "situation": "Sophia spoke a little too loudly.",
+    "user": "You spoke a little too loudly.",
+    "expectedAnswer": "Sorry about that. I will use a softer voice.",
+    "src": "/videos/ablation3/IMG_1289.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1290",
+    "dialogueId": 26,
+    "title": "Cooking Pasta",
+    "situation": "The user wants basic cooking steps.",
+    "user": "I want to cook pasta tonight. What are the basic steps?",
+    "expectedAnswer": "Boil water, add pasta, wait until it softens, then add sauce.",
+    "src": "/videos/ablation3/IMG_1290.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1291",
+    "dialogueId": 24,
+    "title": "Explain More Slowly",
+    "situation": "Sophia explained something too fast.",
+    "user": "You explained too fast. Can you say it again?",
+    "expectedAnswer": "Sorry about that. I will slow down and explain it more clearly.",
+    "src": "/videos/ablation3/IMG_1291.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1292",
+    "dialogueId": 13,
+    "title": "Tired After Work",
+    "situation": "The user feels tired after work.",
+    "user": "I am really tired after work.",
+    "expectedAnswer": "That sounds exhausting. Maybe a short break would help you recover.",
+    "src": "/videos/ablation3/IMG_1292.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1293",
+    "dialogueId": 35,
+    "title": "Study Plan",
+    "situation": "The user has two hours to study and wants a plan.",
+    "user": "I have two hours to study. Can you help me plan?",
+    "expectedAnswer": "Yes. Study the hardest topic first, review notes, then do a short practice test.",
+    "src": "/videos/ablation3/IMG_1293.mp4"
+  },
+  {
+    "id": "ablation3-IMG_1294",
+    "dialogueId": 44,
+    "title": "Confused Visitor",
+    "situation": "A visitor seems confused after Sophia's answer.",
+    "user": "A visitor looks confused after your answer.",
+    "expectedAnswer": "I may have explained too quickly. Let me make the main point simpler.",
+    "src": "/videos/ablation3/IMG_1294.mp4"
+  }
+]
