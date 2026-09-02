@@ -43,7 +43,7 @@
     "id": "multi-round-demo",
     "publicLabel": "Sophia Study F",
     "condition": "multi-round-demo",
-    "stimulusSet": "multi-round-demo-17",
+    "stimulusSet": "multi-round-demo-mosaic-7",
     "manifest": "/manifests/multi-round-demo.json",
     "contextLabels": {
       "situation": "Scenario",
