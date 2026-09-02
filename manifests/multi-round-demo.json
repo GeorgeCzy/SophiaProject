@@ -44,6 +44,28 @@
     "src": "/videos/multi-round-demo/4Mosaic_BirthdayGift.mp4"
   },
   {
+    "id": "multi-round-demo-5-sandwich",
+    "dialogueId": 5,
+    "scenarioId": 5,
+    "variant": "standard",
+    "sourceFolder": "MultiRoundDemo2",
+    "title": "Sandwich",
+    "situation": "Multi-round demo scenario: Sandwich.",
+    "user": "Evaluate the full multi-round interaction shown in the video.",
+    "src": "/videos/multi-round-demo/5Sandwich.mp4"
+  },
+  {
+    "id": "multi-round-demo-6-feel-frustrated",
+    "dialogueId": 6,
+    "scenarioId": 6,
+    "variant": "standard",
+    "sourceFolder": "MultiRoundDemo2",
+    "title": "Feel Frustrated",
+    "situation": "Multi-round demo scenario: Feel Frustrated.",
+    "user": "Evaluate the full multi-round interaction shown in the video.",
+    "src": "/videos/multi-round-demo/6FeelFrustrated.mp4"
+  },
+  {
     "id": "multi-round-demo-7-take-airplane-mosaic",
     "dialogueId": 7,
     "scenarioId": 7,
@@ -53,6 +75,17 @@
     "situation": "Multi-round demo scenario: Take Airplane.",
     "user": "Evaluate the full multi-round interaction shown in the video.",
     "src": "/videos/multi-round-demo/7Mosaic_TakeAirplane.mp4"
+  },
+  {
+    "id": "multi-round-demo-8-do-not-forget-key",
+    "dialogueId": 8,
+    "scenarioId": 8,
+    "variant": "standard",
+    "sourceFolder": "MultiRoundDemo3",
+    "title": "Do Not Forget Key",
+    "situation": "Multi-round demo scenario: Do Not Forget Key.",
+    "user": "Evaluate the full multi-round interaction shown in the video.",
+    "src": "/videos/multi-round-demo/8DontForgetKey.mp4"
   },
   {
     "id": "multi-round-demo-9-travel-to-london-mosaic",
