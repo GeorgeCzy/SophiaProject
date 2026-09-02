@@ -27,6 +27,13 @@ const HEADERS = [
   "stimulus_set",
   "order_seed",
   "dialogue_id",
+  "overall",
+  "visualGrounding",
+  "proactiveInteraction",
+  "memory",
+  "scenario_id",
+  "variant",
+  "source_folder",
 ];
 
 function doPost(event) {

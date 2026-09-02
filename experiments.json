@@ -38,5 +38,39 @@
     "stimulusSet": "daily-dialogue-9",
     "manifest": "/manifests/emage.json",
     "enabled": true
+  },
+  {
+    "id": "multi-round-demo",
+    "publicLabel": "Sophia Study F",
+    "condition": "multi-round-demo",
+    "stimulusSet": "multi-round-demo-17",
+    "manifest": "/manifests/multi-round-demo.json",
+    "contextLabels": {
+      "situation": "Scenario",
+      "user": "Evaluation focus"
+    },
+    "criteria": [
+      {
+        "key": "overall",
+        "label": "Overall",
+        "statement": "Overall, the robot performed well in this multi-round demo."
+      },
+      {
+        "key": "visualGrounding",
+        "label": "Visual Grounding",
+        "statement": "The robot's response and behavior were grounded in the visible scene."
+      },
+      {
+        "key": "proactiveInteraction",
+        "label": "Proactive Interaction",
+        "statement": "The robot proactively supported the interaction at appropriate moments."
+      },
+      {
+        "key": "memory",
+        "label": "Memory",
+        "statement": "The robot remembered relevant information from earlier turns."
+      }
+    ],
+    "enabled": true
   }
 ]

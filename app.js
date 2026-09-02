@@ -6,16 +6,8 @@ const config = {
   submitMode: "no-cors",
   ...(window.SOPHIA_RATING_CONFIG || {}),
 };
-const fallbackExperiment = {
-  id: DEFAULT_EXPERIMENT_ID,
-  publicLabel: "Sophia Study A",
-  condition: "complete",
-  stimulusSet: "daily-dialogue-40",
-  manifest: "/manifests/complete.json",
-  enabled: true,
-};
 
-const criteria = [
+const defaultCriteria = [
   {
     key: "verbalAppropriateness",
     label: "Verbal appropriateness",
@@ -52,6 +44,19 @@ const criteria = [
     statement: "Overall, the robot behaved well in this interaction.",
   },
 ];
+const fallbackExperiment = {
+  id: DEFAULT_EXPERIMENT_ID,
+  publicLabel: "Sophia Study A",
+  condition: "complete",
+  stimulusSet: "daily-dialogue-40",
+  manifest: "/manifests/complete.json",
+  criteria: defaultCriteria,
+  contextLabels: {
+    situation: "Situation",
+    user: "User says",
+  },
+  enabled: true,
+};
 
 const state = {
   experiments: [],
@@ -60,6 +65,8 @@ const state = {
   experimentLabel: fallbackExperiment.publicLabel,
   condition: fallbackExperiment.condition,
   stimulusSet: fallbackExperiment.stimulusSet,
+  criteria: defaultCriteria,
+  contextLabels: fallbackExperiment.contextLabels,
   clips: [],
   participantId: "",
   sessionLabel: "",
@@ -100,7 +107,9 @@ const elements = {
   clipTitle: document.querySelector("#clipTitle"),
   clipVideo: document.querySelector("#clipVideo"),
   videoWarning: document.querySelector("#videoWarning"),
+  clipSituationLabel: document.querySelector("#clipSituationLabel"),
   clipSituation: document.querySelector("#clipSituation"),
+  clipUserLabel: document.querySelector("#clipUserLabel"),
   clipUser: document.querySelector("#clipUser"),
   ratingList: document.querySelector("#ratingList"),
   commentInput: document.querySelector("#commentInput"),
@@ -149,21 +158,43 @@ function normalizeExperiment(experiment) {
     publicLabel: experiment.publicLabel || experiment.label || fallbackExperiment.publicLabel,
     condition: experiment.condition || experiment.id || fallbackExperiment.condition,
     stimulusSet: experiment.stimulusSet || fallbackExperiment.stimulusSet,
+    criteria: normalizeCriteria(experiment.criteria),
+    contextLabels: {
+      ...fallbackExperiment.contextLabels,
+      ...(experiment.contextLabels || {}),
+    },
     enabled: experiment.enabled !== false,
   };
 }
 
-function fallbackClips() {
-  return Array.from({ length: 40 }, (_, index) => {
-    const id = index + 1;
-    return {
-      id,
-      title: `Video ${String(id).padStart(2, "0")}`,
-      situation: "Daily social robot conversation",
-      user: "User utterance for this clip",
-      src: `videos/video-${String(id).padStart(2, "0")}.mp4`,
-    };
-  });
+function normalizeCriteria(criteriaList) {
+  if (!Array.isArray(criteriaList) || criteriaList.length === 0) {
+    return defaultCriteria;
+  }
+
+  const normalized = criteriaList
+    .map((criterion) => {
+      if (typeof criterion === "string") {
+        const label = criterion.trim();
+        return {
+          key: label
+            .replace(/[^a-z0-9]+/gi, " ")
+            .trim()
+            .replace(/\s+([a-z0-9])/gi, (_, char) => char.toUpperCase())
+            .replace(/^./, (char) => char.toLowerCase()),
+          label,
+          statement: `The robot performed well on ${label.toLowerCase()}.`,
+        };
+      }
+      return {
+        key: String(criterion.key || "").trim(),
+        label: String(criterion.label || criterion.key || "").trim(),
+        statement: String(criterion.statement || "").trim(),
+      };
+    })
+    .filter((criterion) => criterion.key && criterion.label);
+
+  return normalized.length ? normalized : defaultCriteria;
 }
 
 function seededShuffle(ids, seedText) {
@@ -213,13 +244,15 @@ function getDialogueId(clip) {
 }
 
 function isRatingComplete(rating) {
-  return Boolean(rating && criteria.every((criterion) => ratingValues.includes(rating[criterion.key])));
+  return Boolean(
+    rating && state.criteria.every((criterion) => ratingValues.includes(rating[criterion.key])),
+  );
 }
 
 function hasAnyRating(rating) {
   return Boolean(
     rating &&
-      (criteria.some((criterion) => ratingValues.includes(rating[criterion.key])) ||
+      (state.criteria.some((criterion) => ratingValues.includes(rating[criterion.key])) ||
         rating.playbackIssue ||
         rating.comment?.trim()),
   );
@@ -289,7 +322,7 @@ function restoreSession() {
 
 function renderCriterionPreview() {
   elements.criterionPreview.innerHTML = "";
-  criteria.forEach((criterion) => {
+  state.criteria.forEach((criterion) => {
     const item = document.createElement("span");
     item.textContent = criterion.label;
     elements.criterionPreview.appendChild(item);
@@ -315,7 +348,7 @@ function renderExperimentSwitcher() {
 
 function renderRatingControls() {
   elements.ratingList.innerHTML = "";
-  criteria.forEach((criterion) => {
+  state.criteria.forEach((criterion) => {
     const field = document.createElement("fieldset");
     field.className = "rating-card";
     field.innerHTML = `
@@ -412,7 +445,9 @@ function render() {
   elements.progressFill.style.width = `${progress}%`;
   elements.clipPosition.textContent = `Video ${state.currentIndex + 1} of ${orderedClips.length}`;
   elements.clipTitle.textContent = clip.title;
+  elements.clipSituationLabel.textContent = state.contextLabels.situation;
   elements.clipSituation.textContent = clip.situation;
+  elements.clipUserLabel.textContent = state.contextLabels.user;
   elements.clipUser.textContent = clip.user;
 
   const videoSrc = resolveAsset(clip.src);
@@ -528,7 +563,7 @@ function getCsvHeader() {
     "condition",
     "video_src",
     "is_complete",
-    ...criteria.map((criterion) => criterion.key),
+    ...state.criteria.map((criterion) => criterion.key),
     "playback_issue",
     "comment",
     "completed_at",
@@ -537,6 +572,9 @@ function getCsvHeader() {
     "stimulus_set",
     "order_seed",
     "dialogue_id",
+    "scenario_id",
+    "variant",
+    "source_folder",
   ];
 }
 
@@ -559,7 +597,7 @@ function buildExportRows(exportedAt = new Date().toISOString()) {
         clip.condition,
         clip.src,
         isRatingComplete(rating),
-        ...criteria.map((criterion) => getRatingValue(rating, criterion.key)),
+        ...state.criteria.map((criterion) => getRatingValue(rating, criterion.key)),
         rating.playbackIssue || false,
         rating.comment,
         rating.completedAt,
@@ -568,6 +606,9 @@ function buildExportRows(exportedAt = new Date().toISOString()) {
         state.stimulusSet,
         state.orderSeed,
         dialogueId,
+        clip.scenarioId ?? "",
+        clip.variant ?? "",
+        clip.sourceFolder ?? "",
       ];
     });
 }
@@ -680,6 +721,8 @@ async function loadExperiment() {
     state.experimentLabel = "Sophia Study";
     state.condition = requestedId;
     state.stimulusSet = fallbackExperiment.stimulusSet;
+    state.criteria = defaultCriteria;
+    state.contextLabels = fallbackExperiment.contextLabels;
     state.loadError = "This study version is not available. Please check the study link.";
     return;
   }
@@ -688,6 +731,8 @@ async function loadExperiment() {
   state.experimentLabel = state.experiment.publicLabel;
   state.condition = state.experiment.condition;
   state.stimulusSet = state.experiment.stimulusSet;
+  state.criteria = state.experiment.criteria;
+  state.contextLabels = state.experiment.contextLabels;
   if (!state.experiment.enabled) {
     state.loadError =
       state.experiment.message || "This study version is not ready yet. Please check the study link.";
@@ -769,9 +814,9 @@ function bindEvents() {
 }
 
 async function init() {
+  await loadExperiment();
   renderCriterionPreview();
   renderRatingControls();
-  await loadExperiment();
   restoreSession();
   await loadClips();
   bindEvents();

@@ -22,14 +22,16 @@ button. Participants can still export CSV as a backup.
 
 ## Multiple study versions
 
-The site can host multiple experiment versions with the same rating criteria.
-Use URL parameters to assign participants to a version:
+The site can host multiple experiment versions. Each version can use the default
+social robot criteria, or define its own criteria in `experiments.json`. Use URL
+parameters to assign participants to a version:
 
 - Complete version: `?experiment=complete`
 - Single-LLM version: `?experiment=single-llm`
+- Multi-round demo: `?experiment=multi-round-demo`
 
 The participant sees only the public study label, such as `Sophia Study A` or
-`Sophia Study B`. The exported and submitted data include `condition`,
+`Sophia Study F`. The exported and submitted data include `condition`,
 `experiment_id`, `stimulus_set`, `order_seed`, and `dialogue_id` for analysis.
 
 When new columns are added to `collector/google-apps-script.js`, paste the
