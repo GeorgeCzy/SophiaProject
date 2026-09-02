@@ -30,5 +30,13 @@
     "stimulusSet": "daily-dialogue-40",
     "manifest": "/manifests/ablation3.json",
     "enabled": true
+  },
+  {
+    "id": "emage",
+    "publicLabel": "Sophia Study E",
+    "condition": "emage",
+    "stimulusSet": "daily-dialogue-9",
+    "manifest": "/manifests/emage.json",
+    "enabled": true
   }
 ]

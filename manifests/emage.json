@@ -1,0 +1,83 @@
+[
+  {
+    "id": "emage-IMG_1299",
+    "dialogueId": 1,
+    "title": "Arrival Greeting",
+    "situation": "A person has just arrived and starts a casual conversation with Sophia.",
+    "user": "Hi Sophia, I just arrived. How are you?",
+    "expectedAnswer": "Hi, I am doing well. It is nice to see you today.",
+    "src": "/videos/emage/IMG_1299.mp4"
+  },
+  {
+    "id": "emage-IMG_1302",
+    "dialogueId": 17,
+    "title": "Presentation Fear",
+    "situation": "The user needs to give a presentation and feels scared.",
+    "user": "I need to give a presentation, but I am scared.",
+    "expectedAnswer": "You can do it. Speak slowly, look at one person, and start with confidence.",
+    "src": "/videos/emage/IMG_1302.mp4"
+  },
+  {
+    "id": "emage-IMG_1305",
+    "dialogueId": 3,
+    "title": "Returning Visitor",
+    "situation": "A person comes back after not seeing Sophia for a while.",
+    "user": "I have not seen you for a while.",
+    "expectedAnswer": "Welcome back. I am happy to talk with you again.",
+    "src": "/videos/emage/IMG_1305.mp4"
+  },
+  {
+    "id": "emage-IMG_1307",
+    "dialogueId": 4,
+    "title": "Introducing A Friend",
+    "situation": "The user brings a friend to meet Sophia for the first time.",
+    "user": "Sophia, my friend is here for the first time. Can you say hello?",
+    "expectedAnswer": "Hello, nice to meet you. I am Sophia.",
+    "src": "/videos/emage/IMG_1307.mp4"
+  },
+  {
+    "id": "emage-IMG_1308",
+    "dialogueId": 30,
+    "title": "Wrong Name",
+    "situation": "Sophia called the user by the wrong name.",
+    "user": "You called me by the wrong name.",
+    "expectedAnswer": "I am sorry. Thank you for correcting me.",
+    "src": "/videos/emage/IMG_1308.mp4"
+  },
+  {
+    "id": "emage-IMG_1309",
+    "dialogueId": 25,
+    "title": "Messy Room",
+    "situation": "The user wants practical advice for cleaning a messy room.",
+    "user": "My room is messy. What should I clean first?",
+    "expectedAnswer": "Start with the desk, then put away clothes, then throw away trash.",
+    "src": "/videos/emage/IMG_1309.mp4"
+  },
+  {
+    "id": "emage-IMG_1310",
+    "dialogueId": 47,
+    "title": "Shy Child Greeting",
+    "situation": "A shy child wants to say hello to Sophia.",
+    "user": "A child is shy but wants to say hello to you.",
+    "expectedAnswer": "Hello. It is okay to be shy. I am happy to meet you.",
+    "src": "/videos/emage/IMG_1310.mp4"
+  },
+  {
+    "id": "emage-IMG_1313",
+    "dialogueId": 21,
+    "title": "Choosing Food",
+    "situation": "The user is hungry but does not know what to eat.",
+    "user": "I am hungry but do not know what to eat.",
+    "expectedAnswer": "Choose something simple and warm if you want comfort, or something light if you are busy.",
+    "src": "/videos/emage/IMG_1313.mp4"
+  },
+  {
+    "id": "emage-IMG_1314",
+    "dialogueId": 46,
+    "title": "Someone Waiting",
+    "situation": "The user notices someone is waiting behind them and wants to end soon.",
+    "user": "Someone is waiting behind me. I should go soon.",
+    "expectedAnswer": "That is considerate. We can finish this quickly.",
+    "src": "/videos/emage/IMG_1314.mp4"
+  }
+]
